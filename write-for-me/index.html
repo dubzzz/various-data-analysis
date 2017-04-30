@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>[Live] Top hashtags</title>
+    <script src="https://satori-a.akamaihd.net/satori-sdk-js/v1.0.1/sdk.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="./write-for-me.js"></script>
+    <script type="text/javascript">
+    	var learner = new Learner();
+    	function learn() {
+    		learner.update_from_message($("#rawsource").val().split('\n').join(' '));
+    	}
+    	function generate() {
+    		$("#generated").text(learner.write());
+    	}
+    </script>
+  </head>
+  <body>
+  	<p id="generated"></p>
+  	<h2>Examples for learner:</h2>
+  	<div>
+  		<textarea id="rawsource"></textarea>
+  	</div>
+  	<div>
+  		<button onclick="learn()">Learn</button>
+  		<button onclick="generate()">Generate</button>
+  	</div>
+  </body>
+</html>
