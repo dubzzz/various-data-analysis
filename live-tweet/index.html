@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>[Live] Top hashtags</title>
+    <script src="https://satori-a.akamaihd.net/satori-sdk-js/v1.0.1/sdk.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="./live-tweet.js"></script>
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
+
+    <style type="text/css">
+      ul {
+        display: inline-block;
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        padding-left: 0px;
+      }
+      .tag-name {}
+      .hit-count {
+        display: inline-block;
+        width: 50px;
+        padding-right: 10px;
+        text-align: right;
+        color: #555;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="row">
+      <div class="col-md-4">
+        <h2>Hashtags</h2>
+        <ul id="top_hashtags"></ul>
+      </div>
+      <div class="col-md-4">
+        <h2>Users</h2>
+        <ul id="top_users"></ul>
+      </div>
+      <div class="col-md-4">
+        <h2>Buzz-words</h2>
+        <ul id="top_buzzwords"></ul>
+      </div>
+    </div>
+    
+    <script type="text/javascript">
+      rankings.push(new Ranking($("#top_hashtags"), /(^|\s)#([\w-]+)\b/g));
+      rankings.push(new Ranking($("#top_users"), /(^|\s)@([\w-]+)\b/g));
+      rankings.push(new Ranking($("#top_buzzwords"), /()([\w-]{5}[\w-]*)/g));
+    </script>
+  </body>
+</html>
