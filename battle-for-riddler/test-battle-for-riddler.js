@@ -47,3 +47,31 @@ QUnit.test("generate multiple strategies", function(assert) {
 		check_spread_accross_buckets(assert, strategies[idx], STRATEGY_POPULATION, STRATEGY_SIZE);
 	}
 });
+
+QUnit.module("run_battle");
+
+QUnit.test("battle on empty strategies", function(assert) {
+	assert.strictEqual(run_battle([], []), 0, "no winner");
+});
+
+QUnit.test("1st player wins", function(assert) {
+	assert.strictEqual(run_battle([1,1,1,5], [1,1,5,1]), 1, "1st player wins");
+});
+
+QUnit.test("2nd player wins", function(assert) {
+	assert.strictEqual(run_battle([0,0,0,0,10], [1,1,1,1,6]), 2, "2nd player wins");
+});
+
+QUnit.test("no winner: same strategy", function(assert) {
+	assert.strictEqual(run_battle([0,1,0,1], [0,1,0,1]), 0, "no winner");
+	assert.strictEqual(run_battle([1,51,2,36,42], [1,51,2,36,42]), 0, "no winner");
+});
+
+QUnit.test("no winner: different strategy", function(assert) {
+	assert.strictEqual(run_battle([0,0,2], [1,1,0]), 0, "no winner");
+});
+
+QUnit.test("detect possible rounding issue", function(assert) {
+	assert.strictEqual(run_battle([1,1,1], [0,1,1]), 1, "1st wins");
+	assert.strictEqual(run_battle([1,1,0], [0,0,1]), 0, "no winner");
+});
