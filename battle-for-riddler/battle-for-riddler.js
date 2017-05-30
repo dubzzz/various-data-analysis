@@ -1,4 +1,4 @@
-function generate_strategy(total_population, num_buckets) {
+function spread_accross_buckets(total_population, num_buckets) {
 	/**
 	 * Spread <total_population> accross <num_buckets> slots
 	 * Population is randomly spread accross buckets
@@ -38,9 +38,18 @@ function generate_strategy(total_population, num_buckets) {
 	return strategy;
 }
 
-/*
 var STRATEGY_POPULATION = 100;
 var STRATEGY_SIZE = 10;
+
+function generate_strategies(num) {
+	var strategies = [];
+	for (var i = 0 ; i != num ; ++i) {
+		strategies.push(spread_accross_buckets(STRATEGY_POPULATION, STRATEGY_SIZE));
+	}
+	return strategies;
+}
+
+/*
 
 var MAX_FAILURES = 5;
 var MAX_MUTATIONS = 100;
@@ -120,14 +129,6 @@ function sorted_strategies(strategies, scores) {
 function run_all_battles(panel_strategies, strategies) {
 	var scores = compute_scoreboard(panel_strategies, strategies);
 	return sorted_strategies(strategies, scores);
-}
-
-function generate_strategies(num) {
-	var strategies = [];
-	for (var i = 0 ; i != num ; ++i) {
-		strategies.push(generate_strategy());
-	}
-	return strategies;
 }
 
 function mutated_strategies(panel_strategies, strategies) {
