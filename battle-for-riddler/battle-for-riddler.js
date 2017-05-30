@@ -62,13 +62,11 @@ function run_battle(st1, st2) {
 	var score1 = 0;
 	var score2 = 0;
 	for (var i = 0 ; i != STRATEGY_SIZE ; ++i) {
-		var pt = i +1;
-		if (st1[i] > st2[i]) { score1 += pt; }
-		else if (st1[i] < st2[i]) { score2 += pt; }
+		if (st1[i] > st2[i]) { score1 += 2*(i+1); }
+		else if (st1[i] < st2[i]) { score2 += 2*(i+1); }
 		else {
-			pt /= 2;
-			score1 += pt;
-			score2 += pt;
+			score1 += i+1;
+			score2 += i+1;
 		}
 	}
 	return score1 < score2 ? 2 : (score1 > score2 ? 1 : 0);
