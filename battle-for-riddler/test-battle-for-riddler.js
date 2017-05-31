@@ -75,3 +75,46 @@ QUnit.test("detect possible rounding issue", function(assert) {
 	assert.strictEqual(run_battle([1,1,1], [0,1,1]), 1, "1st wins");
 	assert.strictEqual(run_battle([1,1,0], [0,0,1]), 0, "no winner");
 });
+
+QUnit.module("mutated_strategy");
+
+QUnit.test("should not alter the input", function(assert) {
+	var input = [1,2,3];
+	mutated_strategy(input);
+	assert.deepEqual(input, [1,2,3], "same values");
+});
+
+QUnit.test("should not be the same array as input (in terms of pointer)", function(assert) {
+	var input = [1,2,3];
+	var out = mutated_strategy(input);
+	assert.ok(input !== out, "different arrays");
+});
+
+QUnit.test("same population and same size as input", function(assert) {
+	var out = mutated_strategy([5,8,9,10,3,6,42]);
+	assert.strictEqual(out.length, 7, "same size");
+	assert.strictEqual(accumulate(out, 0, (acc, cur) => acc + cur), 83, "same population");
+});
+
+QUnit.test("output remains a valid strategy", function(assert) {
+	var out = mutated_strategy([5,8,1,10,0,6,12]);
+	check_spread_accross_buckets(assert, out, 42, 7);
+});
+
+QUnit.module("score_battle");
+
+QUnit.test("expected outputs", function(assert) {
+	assert.deepEqual(score_battle([3,0,0], [1,1,1]), [0,BATTLE_WIN], "2nd wins");
+	assert.deepEqual(score_battle([1,1,1],[3,0,0]), [BATTLE_WIN,0], "1st wins");
+	assert.deepEqual(score_battle([1,1,1],[1,1,1]), [BATTLE_EQUALITY,BATTLE_EQUALITY], "no winner");
+});
+
+QUnit.module("score_against_panel");
+
+QUnit.test("empty panel", function(assert) {
+	assert.strictEqual(score_against_panel([], [1,1,1]), 0, "null score");
+});
+
+QUnit.test("real panel", function(assert) {
+	assert.strictEqual(score_against_panel([[3,0,0],[0,3,0],[0,0,3],[0,1,2]], [1,1,1]), BATTLE_WIN + BATTLE_WIN + BATTLE_EQUALITY + 0, "score should be to 2x wins + 1x equality");
+});

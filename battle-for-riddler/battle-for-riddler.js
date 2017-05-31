@@ -40,6 +40,10 @@ function spread_accross_buckets(total_population, num_buckets) {
 
 var STRATEGY_POPULATION = 100;
 var STRATEGY_SIZE = 10;
+var MAX_MUTATIONS = 100;
+
+var BATTLE_WIN = 3;
+var BATTLE_EQUALITY = 1;
 
 function generate_strategies(num) {
 	var strategies = [];
@@ -72,26 +76,45 @@ function run_battle(st1, st2) {
 	return score1 < score2 ? 2 : (score1 > score2 ? 1 : 0);
 }
 
-/*
+function score_battle(st1, st2) {
+	/**
+	 * Compute the score of <st1>,<st2> for the battle facing <st1> to <st2>
+	 * 
+	 * Output is an array with first corresponding to <st1>'s score, second to <st2>'s
+	 * win    = BATTLE_WIN pts
+	 * nul    = BATTLE_EQUALITY pts
+	 * defeat = 0 pts
+	 */
+	var winner = run_battle(st1, st2);
+	if (winner == 1) { return [BATTLE_WIN, 0]; }
+	else if (winner == 2) { return [0, BATTLE_WIN]; }
+	else { return [BATTLE_EQUALITY, BATTLE_EQUALITY]; }
+}
 
-var MAX_FAILURES = 5;
-var MAX_MUTATIONS = 100;
-
-var NUM_KEPT_STRATEGIES = 10;
-var NUM_MUTATE_STRATEGIES = 80;
-var NUM_STRATEGIES = 100;
-
-var NUM_PANEL_STRATEGIES = 1000;
-
-var BATTLE_WIN = 3;
-var BATTLE_EQUALITY = 1;
+function score_against_panel(panel_strategies, strategy) {
+	/**
+	 * Compute the score of <strategy> facing all the strategies in <panel_strategies>
+	 * 
+	 * win    = BATTLE_WIN pts
+	 * nul    = BATTLE_EQUALITY pts
+	 * defeat = 0 pts
+	 */
+	return accumulate(panel_strategies, 0, (acc, s) => acc + score_battle(strategy, s)[0]);
+}
 
 function mutated_strategy(strategy) {
+	/**
+	 * Derived an incoming <strategy> into a mutated version of itself
+	 *
+	 * Input strategy should not be modified
+	 * Output strategy has the same size and population, it must be another array but might be equal
+	 */
+
 	var mutated = strategy.slice();
 	var num_mutations = Math.floor(MAX_MUTATIONS * Math.random());
 	for (var i = 0 ; i != num_mutations ; ++i) {
-		var idx1 = Math.floor(STRATEGY_SIZE * Math.random());
-		var idx2 = Math.floor(STRATEGY_SIZE * Math.random());
+		var idx1 = Math.floor(strategy.length * Math.random());
+		var idx2 = Math.floor(strategy.length * Math.random());
 		if (idx1 == idx2) { continue; }
 		if (mutated[idx1] < 1) { continue; }
 		--mutated[idx1];
@@ -100,15 +123,15 @@ function mutated_strategy(strategy) {
 	return mutated;
 }
 
-function compute_score(panel_strategies, strategy) {
-	var score = 0;
-	for (var j = 0 ; j != panel_strategies.length ; ++j) {
-		var winner = run_battle(strategy, panel_strategies[j]);
-		if (winner == 1) { score += BATTLE_WIN; }
-		else if (winner == 0) { score += BATTLE_EQUALITY; }
-	}
-	return score;
-}
+/*
+
+var MAX_FAILURES = 5;
+
+var NUM_KEPT_STRATEGIES = 10;
+var NUM_MUTATE_STRATEGIES = 80;
+var NUM_STRATEGIES = 100;
+
+var NUM_PANEL_STRATEGIES = 1000;
 
 function compute_scoreboard(panel_strategies, strategies) {
 	var scores = [];
