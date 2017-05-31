@@ -71,3 +71,7 @@ QUnit.test("accumulate every entry", function(assert) {
 QUnit.test("accumulate in right order", function(assert) {
 	assert.equal(accumulate(["1","5","2"], "", (acc, cur) => acc + cur), "152", "with empty string initial value");
 });
+
+QUnit.test("accumulate on arrays", function(assert) {
+	assert.deepEqual(accumulate([1,5,2], [], (acc, cur) => { acc.push(cur*cur); return acc; }), [1,25,4], "squared array");
+});

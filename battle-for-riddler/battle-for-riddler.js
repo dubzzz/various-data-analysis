@@ -57,9 +57,23 @@ function sorted_against(input, values, comparator) {
 	return sorted;
 }
 
+function max_against(input, values) {
+	if (values.length === 0) { return undefined; }
+	
+	var max_idx = 0;
+	for (var i = 1 ; i != values.length ; ++i) {
+		if (values[i] > values[max_idx]) {
+			max_idx = i;
+		}
+	}
+	return input[max_idx];
+}
+
 var STRATEGY_POPULATION = 100;
 var STRATEGY_SIZE = 10;
 var MAX_MUTATIONS = 100;
+var PERCENT_KEPT = 10;
+var PERCENT_MUTATE = 80;
 
 var BATTLE_WIN = 3;
 var BATTLE_EQUALITY = 1;
@@ -142,61 +156,54 @@ function mutated_strategy(strategy) {
 	return mutated;
 }
 
-/*
-
-var MAX_FAILURES = 5;
-
-var NUM_KEPT_STRATEGIES = 10;
-var NUM_MUTATE_STRATEGIES = 80;
-var NUM_STRATEGIES = 100;
-
-var NUM_PANEL_STRATEGIES = 1000;
-
-function compute_scoreboard(panel_strategies, strategies) {
-	var scores = [];
-	for (var i = 0 ; i != strategies.length ; ++i) {
-		scores.push(compute_score(panel_strategies, strategies[i]));
-	}
-	return scores;
-}
-
-function run_all_battles(panel_strategies, strategies) {
-	var scores = compute_scoreboard(panel_strategies, strategies);
-	return sorted_strategies(strategies, scores);
-}
-
 function mutated_strategies(panel_strategies, strategies) {
-	var sorted = run_all_battles(panel_strategies, strategies);
+	var scores = accumulate(strategies, [], (acc, s) => { acc.push(score_against_panel(panel_strategies, s)); return acc; });
+	var sorted = sorted_against(strategies, scores, (a,b) => b-a);
 
+	var NUM_KEPT_STRATEGIES = Math.floor(strategies.length * PERCENT_KEPT / 100.);
+	var NUM_MUTATE_STRATEGIES = Math.floor(strategies.length * PERCENT_MUTATE / 100.);
 	var NUM_UPDATED = NUM_KEPT_STRATEGIES + NUM_MUTATE_STRATEGIES;
+
 	for (var i = NUM_KEPT_STRATEGIES ; i != NUM_UPDATED ; ++i) {
 		sorted[i] = mutated_strategy(sorted[i]);
 	}
-	for (var i = NUM_UPDATED ; i != NUM_STRATEGIES ; ++i) {
+	for (var i = NUM_UPDATED ; i != sorted.length ; ++i) {
 		var mutate_from = Math.floor(NUM_KEPT_STRATEGIES * Math.random());
 		sorted[i] = mutated_strategy(sorted[mutate_from]);
 	}
 	return sorted;
 }
 
+function best_strategy(panel_strategies, strategies) {
+	var scores = accumulate(strategies, [], (acc, s) => { acc.push(score_against_panel(panel_strategies, s)); return acc; });
+	return max_against(strategies, scores);
+}
+
+var NUM_STRATEGIES = 100;
+var NUM_PANEL_STRATEGIES = 1000;
+
 function suggest_strategy(steps) {
 	var strategies = generate_strategies(NUM_STRATEGIES);
 	var panel_strategies = generate_strategies(NUM_PANEL_STRATEGIES);
-	if (steps !== undefined) {
-		while (steps-- > 0) {
-			strategies = mutated_strategies(panel_strategies, strategies);
-		}
+	while (steps-- > 0) {
+		strategies = mutated_strategies(panel_strategies, strategies);
 	}
-	else {
-		var current_best = 0;
-		var num_failures = 0;
-		while (num_failures < MAX_FAILURES) {
-			strategies = mutated_strategies(panel_strategies, strategies);
-			var previous_best = current_best;
-			current_best = compute_score(panel_strategies, strategies[0]);
-			if (previous_best < current_best) { num_failures = 0; }
-			else { ++num_failures; }
-		}
+	return best_strategy(panel_strategies, strategies);
+}
+
+function suggest_strategy_retry(retries) {
+	var strategies = generate_strategies(NUM_STRATEGIES);
+	var panel_strategies = generate_strategies(NUM_PANEL_STRATEGIES);
+	
+	var current_best = 0;
+	var num_failures = 0;
+	while (num_failures < retries) {
+		strategies = mutated_strategies(panel_strategies, strategies);
+		var previous_best = current_best;
+		current_best = score_against_panel(panel_strategies, best_strategy(panel_strategies, strategies));
+		if (previous_best < current_best) { num_failures = 0; }
+		else { ++num_failures; }
 	}
-	return run_all_battles(panel_strategies, strategies)[0];
-}*/
+
+	return best_strategy(panel_strategies, strategies);
+}
