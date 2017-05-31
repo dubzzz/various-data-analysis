@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Battle for riddler</title>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="algorithms.js"></script>
+    <script src="battle-for-riddler.js"></script>
+    <script src="dataset.js"></script>
+  </head>
+  <body>
+    <div id="castles"></div>
+    <div id="actions">
+      <button type="button" id="generate">Generate</button>
+      <button type="button" id="battle">Run battle</button>
+    </div>
+
+    <script type="text/javascript">
+      var NUM_FIELDS = 10;
+
+      var $fields = $("#castles");
+      for (var idx = 0 ; idx != NUM_FIELDS ; ++idx) {
+        var $f = $("<input/>");
+        $f.attr("id", "castle" + idx);
+        $f.attr("type", "number");
+        $f.attr("step", "8");
+        $f.attr("value", "0");
+        $f.attr("min", "0");
+        $f.attr("max", "100");
+        $fields.append($f);
+      }
+
+      $("#generate").click(function() {
+          var suggestion = suggest_strategy_retry(NUM_FIELDS);
+          for (var i = 0 ; i != NUM_FIELDS ; ++i) {
+            $("#castle" + i).val(suggestion[i]);
+          }
+      });
+      $("#battle").click(function() {
+          var suggestion = [];
+          for (var i = 0 ; i != NUM_FIELDS ; ++i) {
+            suggestion.push($("#castle" + i).val());
+          }
+          var augmented_dataset = dataset.slice();
+          augmented_dataset.push(suggestion);
+
+          var scores = [];
+          for (var i = 0 ; i != augmented_dataset.length ; ++i) {
+            scores.push(0);
+          }
+
+          for (var i = 0 ; i != augmented_dataset.length -1 ; ++i) {
+            for (var j = i+1 ; j != augmented_dataset.length ; ++j) {
+              var s = score_battle(augmented_dataset[i], augmented_dataset[j]);
+              scores[i] += s[0];
+              scores[j] += s[1];
+            }
+          }
+          augmented_dataset = sorted_against(augmented_dataset, scores, (a,b) => b-a);
+          var ranking = augmented_dataset.indexOf(suggestion) +1; //search by pointer
+
+          alert("You ranked " + ranking + (ranking % 10 == 1 ? "st" : (ranking % 10 == 2 ? "sd" : (ranking % 10 == 3 ? "rd" : "th"))));
+      });
+    </script>
+  </body>
+</html>
