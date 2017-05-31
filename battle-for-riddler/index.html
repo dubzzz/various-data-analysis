@@ -72,8 +72,9 @@
       });
 
       $("#battle").click(function() {
+          var suggestion = read_user_input();
           var augmented_dataset = dataset.slice();
-          augmented_dataset.push(read_user_input());
+          augmented_dataset.push(suggestion);
 
           var scores = [];
           for (var i = 0 ; i != augmented_dataset.length ; ++i) {
