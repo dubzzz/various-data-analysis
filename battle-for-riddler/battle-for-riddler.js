@@ -38,6 +38,25 @@ function spread_accross_buckets(total_population, num_buckets) {
 	return strategy;
 }
 
+function sorted_against(input, values, comparator) {
+	/**
+	 * Sort an <input> array according to another array <values>
+	 * and applying the comparator <comparator>
+	 *
+	 * <input> and <values> should not be impacted
+	 */
+	var data = [];
+	for (var i = 0 ; i != input.length ; ++i) {
+		data.push({in: input[i], v: values[i]});
+	}
+	data.sort((a,b) => comparator(a.v, b.v));
+	var sorted = [];
+	for (var i = 0 ; i != data.length ; ++i) {
+		sorted.push(data[i].in);
+	}
+	return sorted;
+}
+
 var STRATEGY_POPULATION = 100;
 var STRATEGY_SIZE = 10;
 var MAX_MUTATIONS = 100;
@@ -139,21 +158,6 @@ function compute_scoreboard(panel_strategies, strategies) {
 		scores.push(compute_score(panel_strategies, strategies[i]));
 	}
 	return scores;
-}
-
-function sorted_strategies(strategies, scores) {
-	var data = [];
-	for (var i = 0 ; i != strategies.length ; ++i) {
-		data.push({strategy: strategies[i], score: scores[i]});
-	}
-	data.sort(function(a,b) { return b.score - a.score; });
-	var sorted = [];
-	for (var i = 0 ; i != data.length ; ++i) {
-		sorted.push(data[i].strategy);
-	}
-	console.log("Best score is: ", data[0].score);
-	console.log("Sorted strategies: ", data);
-	return sorted;
 }
 
 function run_all_battles(panel_strategies, strategies) {

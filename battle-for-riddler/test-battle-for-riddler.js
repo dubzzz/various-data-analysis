@@ -118,3 +118,22 @@ QUnit.test("empty panel", function(assert) {
 QUnit.test("real panel", function(assert) {
 	assert.strictEqual(score_against_panel([[3,0,0],[0,3,0],[0,0,3],[0,1,2]], [1,1,1]), BATTLE_WIN + BATTLE_WIN + BATTLE_EQUALITY + 0, "score should be to 2x wins + 1x equality");
 });
+
+QUnit.module("sorted_against");
+
+QUnit.test("should not alter the inputs", function(assert) {
+	var input = [5,8,1];
+	var values = [1,3,2];
+	var out = sorted_against(input, values, (a,b) => a-b);
+	assert.deepEqual(input, [5,8,1], "no impact on input");
+	assert.deepEqual(values, [1,3,2], "no impact on values");
+	assert.ok(input !== out, "out different from input (in terms of pointer)");
+});
+
+QUnit.test("sorted against values", function(assert) {
+	var input = [5,8,1,7,9,0];
+	var values = [1,3,6,2,5,4];
+
+	assert.deepEqual(sorted_against(input, values, (a,b) => a-b), [5,7,8,0,9,1], "sorted against values");
+	assert.deepEqual(sorted_against(input, values, (a,b) => b-a), [1,9,0,8,7,5], "sorted against values (reverse)");
+});
