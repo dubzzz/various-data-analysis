@@ -75,3 +75,13 @@ QUnit.test("accumulate in right order", function(assert) {
 QUnit.test("accumulate on arrays", function(assert) {
 	assert.deepEqual(accumulate([1,5,2], [], (acc, cur) => { acc.push(cur*cur); return acc; }), [1,25,4], "squared array");
 });
+
+QUnit.module("generate_n");
+
+QUnit.test("n is null", function(assert) {
+	assert.strictEqual(generate_n(0, () => -1).length, 0, "empty array");
+});
+
+QUnit.test("right size", function(assert) {
+	assert.deepEqual(generate_n(3, () => -1), [-1,-1,-1], "expected array");
+});

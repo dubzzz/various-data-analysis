@@ -86,6 +86,68 @@ function generate_strategies(num) {
 	return strategies;
 }
 
+function count_better_strategies_helper(strategy, already_asked, num_buckets, total_population, doubled_target_score) {
+	/**
+	 * Count the number of strategies able to beat <strategy>
+	 * and having the following criteria:
+	 * - it earns more than <doubled_target_score>/2 points over <strategy> on [0,num_buckets[
+	 * - over [0,num_buckets[, its population is <total_population>
+	 *
+	 * Inputs have to be such has:
+	 * - num_buckets >= 0
+	 * - total_population >= 0
+	 * - doubled_target_score >= 0
+	 * - already_asked[i][j][k] is defined equal to -1 for all unknown configuration
+	 *   with i in [0;num_buckets[, j in [0;total_population[ and k in [0;max(0,doubled_target_score)[
+	 */
+
+	if (num_buckets === 0) {
+		if (doubled_target_score <= 0) { return 1; }
+		else { return 0; }
+	}
+	if (num_buckets === 1) {
+		if (doubled_target_score <= 0) { return 1; }
+		else if (doubled_target_score > 2) { return 0; }
+		else if (doubled_target_score == 2) { return total_population > strategy[0] ? 1 : 0; }
+		else { return total_population >= strategy[0] ? 1 : 0; }
+	}
+	var available_points = num_buckets * (1 + num_buckets);
+	if (available_points < doubled_target_score) { return 0; }
+	else if (total_population === 0) { return 1; }
+
+	if (already_asked[num_buckets-1][total_population-1][doubled_target_score] >= 0) {
+		return already_asked[num_buckets-1][total_population-1][doubled_target_score];
+	}
+
+	var num_better = 0;
+	for (var bid = 0 ; bid <= total_population ; ++bid) {
+		var ask = strategy[num_buckets -1];
+		var earned_pts = bid < ask ? 0 : (bid === ask ? num_buckets : 2*num_buckets);
+		var new_target = Math.max(0, doubled_target_score -earned_pts);
+		num_better += count_better_strategies_helper(strategy, already_asked, num_buckets-1, total_population -bid, new_target);
+	}
+
+	already_asked[num_buckets-1][total_population-1][doubled_target_score] = num_better;
+	return num_better;
+}
+
+function count_better_strategies(strategy) {
+	/**
+	 * Count and return the number of strategies being better (or same) than <strategy>
+	 * and having the same number of buckets and population
+	 */
+	
+	var num_buckets = strategy.length;
+	var total_population = accumulate(strategy, 0, (acc, cur) => acc + cur);
+	var max_score = num_buckets * (1 + num_buckets) / 2;
+
+	var already_asked = generate_n(num_buckets
+			, () => generate_n(total_population
+				, () => generate_n(max_score
+					, () => -1)));
+	return count_better_strategies_helper(strategy, already_asked, num_buckets, total_population, max_score);
+}
+
 function run_battle(st1, st2) {
 	/**
 	 * Run a battle between strategy <st1> and <st2>

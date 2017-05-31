@@ -19,3 +19,9 @@ function accumulate(elements, initial, accumulator) {
 	}
 	return initial;
 }
+
+function generate_n(num, generator) {
+	var out = [];
+	while (num-- > 0) { out.push(generator()); }
+	return out;
+}
