@@ -65,8 +65,8 @@
       $("#evaluate").click(function() {
           var worst_strategy = generate_n(STRATEGY_SIZE, () => 0);
           worst_strategy[0] = STRATEGY_POPULATION;
-          var minimize_score = count_better_strategies(worst_strategy) - count_better_strategies(read_user_input());
-          alert("Minimize risk trainer: " + minimize_score);
+          var minimize_score = count_better_strategies(worst_strategy) / count_better_strategies(read_user_input());
+          alert("Minimize risk trainer: " + Number(minimize_score).toFixed(2));
       });
 
       $("#battle").click(function() {
