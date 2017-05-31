@@ -71,9 +71,8 @@ function max_against(input, values) {
 
 var STRATEGY_POPULATION = 100;
 var STRATEGY_SIZE = 10;
-var MAX_MUTATIONS = 10;
+var MAX_MUTATIONS = 2;
 var PERCENT_KEPT = 10;
-var PERCENT_MUTATE = 80;
 
 var BATTLE_WIN = 3;
 var BATTLE_EQUALITY = 1;
@@ -206,7 +205,7 @@ function mutated_strategy(strategy) {
 	 */
 
 	var mutated = strategy.slice();
-	var num_mutations = 1 + Math.floor(MAX_MUTATIONS * Math.random());
+	var num_mutations = Math.floor((MAX_MUTATIONS +1) * Math.random());
 	for (var i = 0 ; i != num_mutations ; ++i) {
 		var idx1 = Math.floor(strategy.length * Math.random());
 		var idx2 = Math.floor(strategy.length * Math.random());
@@ -218,20 +217,28 @@ function mutated_strategy(strategy) {
 	return mutated;
 }
 
+function derive_from_parents(parents) {
+	/**
+	 * Derive two <parents> into a mutated version
+	 */
+
+	var generate_id = () => Math.floor(parents.length * Math.random());
+	var parent_id = () => Math.random() < 0.5 ? 0 : 1;
+
+	var familly = [parents[generate_id()], parents[generate_id()]];
+	var idx = 0;
+	var derived = generate_n(parents[0].length, () => familly[parent_id()][idx++]);
+	return mutated_strategy(derived);
+}
+
 function mutated_strategies(strategies, trainer) {
 	var scores = accumulate(strategies, [], (acc, s) => { acc.push(trainer(s, strategies)); return acc; });
 	var sorted = sorted_against(strategies, scores, (a,b) => b-a);
 
 	var NUM_KEPT_STRATEGIES = Math.floor(strategies.length * PERCENT_KEPT / 100.);
-	var NUM_MUTATE_STRATEGIES = Math.floor(strategies.length * PERCENT_MUTATE / 100.);
-	var NUM_UPDATED = NUM_KEPT_STRATEGIES + NUM_MUTATE_STRATEGIES;
-
-	for (var i = NUM_KEPT_STRATEGIES ; i != NUM_UPDATED ; ++i) {
-		sorted[i] = mutated_strategy(sorted[i]);
-	}
-	for (var i = NUM_UPDATED ; i != sorted.length ; ++i) {
-		var mutate_from = Math.floor(NUM_KEPT_STRATEGIES * Math.random());
-		sorted[i] = mutated_strategy(sorted[mutate_from]);
+	var parents = sorted.slice(0, NUM_KEPT_STRATEGIES);
+	for (var i = 0 ; i != sorted.length ; ++i) {
+		sorted[i] = derive_from_parents(parents);
 	}
 	return sorted;
 }
