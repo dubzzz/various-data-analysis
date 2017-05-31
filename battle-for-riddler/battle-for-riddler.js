@@ -71,7 +71,7 @@ function max_against(input, values) {
 
 var STRATEGY_POPULATION = 100;
 var STRATEGY_SIZE = 10;
-var MAX_MUTATIONS = 100;
+var MAX_MUTATIONS = 10;
 var PERCENT_KEPT = 10;
 var PERCENT_MUTATE = 80;
 
@@ -206,7 +206,7 @@ function mutated_strategy(strategy) {
 	 */
 
 	var mutated = strategy.slice();
-	var num_mutations = Math.floor(MAX_MUTATIONS * Math.random());
+	var num_mutations = 1 + Math.floor(MAX_MUTATIONS * Math.random());
 	for (var i = 0 ; i != num_mutations ; ++i) {
 		var idx1 = Math.floor(strategy.length * Math.random());
 		var idx2 = Math.floor(strategy.length * Math.random());
