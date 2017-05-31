@@ -66,7 +66,13 @@
           var worst_strategy = generate_n(STRATEGY_SIZE, () => 0);
           worst_strategy[0] = STRATEGY_POPULATION;
           var minimize_score = count_better_strategies(worst_strategy) / count_better_strategies(read_user_input());
-          alert("Minimize risk trainer: " + Number(minimize_score).toFixed(2));
+
+          var suggestion = read_user_input();
+          var score = accumulate(dataset, 0, (acc, s) => acc + score_battle(suggestion, s)[0]);
+          var summary = accumulate(dataset, [0,0,0], (acc, s) => { ++acc[run_battle(suggestion, s)]; return acc;});
+
+          alert("Minimize risk trainer: " + Number(minimize_score).toFixed(2) + "\n"
+              + "Score in the contest: " + score + " (" + summary[1] + " wins, " + summary[0] + " nuls, " + summary[2] + " defeats)");
       });
 
       $("#battle").click(function() {
