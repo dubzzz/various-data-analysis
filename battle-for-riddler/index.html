@@ -17,9 +17,7 @@
         <button type="button" id="generate_self_trained">Generate (self-trained trainer)</button>
       </div>
       <div>
-        <button type="button" id="evaluate_minimizer">Evaluate</button>
-      </div>
-      <div>
+        <button type="button" id="evaluate">Evaluate</button>
         <button type="button" id="battle">Run battle</button>
       </div>
     </div>
@@ -49,7 +47,7 @@
       function read_user_input() {
         var suggestion = [];
         for (var i = 0 ; i != NUM_FIELDS ; ++i) {
-          suggestion.push($("#castle" + i).val());
+          suggestion.push(+$("#castle" + i).val());
         }
         return suggestion;
       }
@@ -64,7 +62,7 @@
           generate_with_trainer(make_self_trained_trainer());
       });
 
-      $("#evaluate_minimizer").click(function() {
+      $("#evaluate").click(function() {
           var worst_strategy = generate_n(STRATEGY_SIZE, () => 0);
           worst_strategy[0] = STRATEGY_POPULATION;
           var minimize_score = count_better_strategies(worst_strategy) - count_better_strategies(read_user_input());
