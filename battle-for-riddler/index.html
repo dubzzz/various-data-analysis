@@ -11,8 +11,17 @@
   <body>
     <div id="castles"></div>
     <div id="actions">
-      <button type="button" id="generate">Generate</button>
-      <button type="button" id="battle">Run battle</button>
+      <div>
+        <button type="button" id="generate">Generate (panel trainer)</button>
+        <button type="button" id="generate_minimizer">Generate (minimize risk trainer)</button>
+        <button type="button" id="generate_self_trained">Generate (self-trained trainer)</button>
+      </div>
+      <div>
+        <button type="button" id="evaluate_minimizer">Evaluate</button>
+      </div>
+      <div>
+        <button type="button" id="battle">Run battle</button>
+      </div>
     </div>
 
     <script type="text/javascript">
@@ -30,19 +39,41 @@
         $fields.append($f);
       }
 
-      $("#generate").click(function() {
-          var suggestion = suggest_strategy_retry(NUM_FIELDS);
+      function generate_with_trainer(trainer) {
+        var suggestion = suggest_strategy_retry(10, trainer);
           for (var i = 0 ; i != NUM_FIELDS ; ++i) {
             $("#castle" + i).val(suggestion[i]);
           }
+      }
+
+      function read_user_input() {
+        var suggestion = [];
+        for (var i = 0 ; i != NUM_FIELDS ; ++i) {
+          suggestion.push($("#castle" + i).val());
+        }
+        return suggestion;
+      }
+
+      $("#generate").click(function() {
+          generate_with_trainer(make_panel_trainer());
       });
+      $("#generate_minimizer").click(function() {
+          generate_with_trainer(make_minimizer_trainer());
+      });
+      $("#generate_self_trained").click(function() {
+          generate_with_trainer(make_self_trained_trainer());
+      });
+
+      $("#evaluate_minimizer").click(function() {
+          var worst_strategy = generate_n(STRATEGY_SIZE, () => 0);
+          worst_strategy[0] = STRATEGY_POPULATION;
+          var minimize_score = count_better_strategies(worst_strategy) - count_better_strategies(read_user_input());
+          alert("Minimize risk trainer: " + minimize_score);
+      });
+
       $("#battle").click(function() {
-          var suggestion = [];
-          for (var i = 0 ; i != NUM_FIELDS ; ++i) {
-            suggestion.push($("#castle" + i).val());
-          }
           var augmented_dataset = dataset.slice();
-          augmented_dataset.push(suggestion);
+          augmented_dataset.push(read_user_input());
 
           var scores = [];
           for (var i = 0 ; i != augmented_dataset.length ; ++i) {

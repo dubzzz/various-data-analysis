@@ -98,7 +98,7 @@ function count_better_strategies_helper(strategy, already_asked, num_buckets, to
 	 * - total_population >= 0
 	 * - doubled_target_score >= 0
 	 * - already_asked[i][j][k] is defined equal to -1 for all unknown configuration
-	 *   with i in [0;num_buckets[, j in [0;total_population[ and k in [0;max(0,doubled_target_score)[
+	 *   with i in [0;num_buckets[, j in [0;total_population[ and k in [0;max(0,doubled_target_score)]
 	 */
 
 	if (num_buckets === 0) {
@@ -143,7 +143,7 @@ function count_better_strategies(strategy) {
 
 	var already_asked = generate_n(num_buckets
 			, () => generate_n(total_population
-				, () => generate_n(max_score
+				, () => generate_n(max_score+1
 					, () => -1)));
 	return count_better_strategies_helper(strategy, already_asked, num_buckets, total_population, max_score);
 }
@@ -194,7 +194,7 @@ function score_against_panel(panel_strategies, strategy) {
 	 * nul    = BATTLE_EQUALITY pts
 	 * defeat = 0 pts
 	 */
-	return accumulate(panel_strategies, 0, (acc, s) => acc + score_battle(strategy, s)[0]);
+	return accumulate(panel_strategies, 0, (acc, s) => strategy === s ? acc : acc + score_battle(strategy, s)[0]);
 }
 
 function mutated_strategy(strategy) {
@@ -218,8 +218,8 @@ function mutated_strategy(strategy) {
 	return mutated;
 }
 
-function mutated_strategies(panel_strategies, strategies) {
-	var scores = accumulate(strategies, [], (acc, s) => { acc.push(score_against_panel(panel_strategies, s)); return acc; });
+function mutated_strategies(strategies, trainer) {
+	var scores = accumulate(strategies, [], (acc, s) => { acc.push(trainer(s, strategies)); return acc; });
 	var sorted = sorted_against(strategies, scores, (a,b) => b-a);
 
 	var NUM_KEPT_STRATEGIES = Math.floor(strategies.length * PERCENT_KEPT / 100.);
@@ -236,36 +236,48 @@ function mutated_strategies(panel_strategies, strategies) {
 	return sorted;
 }
 
-function best_strategy(panel_strategies, strategies) {
-	var scores = accumulate(strategies, [], (acc, s) => { acc.push(score_against_panel(panel_strategies, s)); return acc; });
+function best_strategy(strategies, trainer) {
+	var scores = accumulate(strategies, [], (acc, s) => { acc.push(trainer(s, strategies)); return acc; });
 	return max_against(strategies, scores);
 }
 
 var NUM_STRATEGIES = 100;
 var NUM_PANEL_STRATEGIES = 1000;
 
-function suggest_strategy(steps) {
-	var strategies = generate_strategies(NUM_STRATEGIES);
-	var panel_strategies = generate_strategies(NUM_PANEL_STRATEGIES);
-	while (steps-- > 0) {
-		strategies = mutated_strategies(panel_strategies, strategies);
-	}
-	return best_strategy(panel_strategies, strategies);
+function make_minimizer_trainer() {
+	return (strategy, others) => -count_better_strategies(strategy);
 }
 
-function suggest_strategy_retry(retries) {
+function make_panel_trainer() {
+	var panel_strategies = generate_strategies(NUM_PANEL_STRATEGIES);
+	return (strategy, others) => score_against_panel(panel_strategies, strategy);
+}
+
+function make_self_trained_trainer() {
+	return (strategy, others) => score_against_panel(strategy, others);
+}
+
+function suggest_strategy(steps, trainer) {
+	var strategies = generate_strategies(NUM_STRATEGIES);
+	while (steps-- > 0) {
+		strategies = mutated_strategies(strategies, trainer);
+	}
+	return best_strategy(strategies, trainer);
+}
+
+function suggest_strategy_retry(retries, trainer) {
 	var strategies = generate_strategies(NUM_STRATEGIES);
 	var panel_strategies = generate_strategies(NUM_PANEL_STRATEGIES);
 	
 	var current_best = 0;
 	var num_failures = 0;
 	while (num_failures < retries) {
-		strategies = mutated_strategies(panel_strategies, strategies);
+		strategies = mutated_strategies(strategies, trainer);
 		var previous_best = current_best;
-		current_best = score_against_panel(panel_strategies, best_strategy(panel_strategies, strategies));
+		current_best = trainer(best_strategy(strategies, trainer), strategies);
 		if (previous_best < current_best) { num_failures = 0; }
 		else { ++num_failures; }
 	}
 
-	return best_strategy(panel_strategies, strategies);
+	return best_strategy(strategies, trainer);
 }
