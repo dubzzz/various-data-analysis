@@ -250,7 +250,7 @@ var NUM_PANEL_STRATEGIES = 1000;
 
 function make_minimizer_trainer(total_population, num_buckets) {
 	var worst_strategy = generate_n(num_buckets, () => 0);
-	worst_strategy[0] = total_popultation;
+	worst_strategy[0] = total_population;
 	var worst_score = count_better_strategies(worst_strategy)
 	return (strategy, others) => worst_score / count_better_strategies(strategy);
 }
