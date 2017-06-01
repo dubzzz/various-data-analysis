@@ -1,3 +1,21 @@
+function normalize_it_to(total_population, array) {
+	var strength = accumulate(array, 0, (acc, cur) => acc + cur);
+	var ratio = strength == 0 ? 1 : 1. * total_population / strength;
+
+	// normalize
+	var normalized_strength = 0;
+	for (var i = 0 ; i != array.length ; ++i) {
+		array[i] = Math.floor(ratio * array[i]);
+		normalized_strength += array[i];
+	}
+
+	// add missing population
+	for (var s = normalized_strength ; s != total_population ; ++s) {
+		++array[Math.floor(num_buckets * Math.random())]
+	}
+	return array;
+}
+
 function spread_accross_buckets(total_population, num_buckets) {
 	/**
 	 * Spread <total_population> accross <num_buckets> slots
@@ -11,31 +29,9 @@ function spread_accross_buckets(total_population, num_buckets) {
 	 * - sum of output = <total_population>
 	 */
 
-	// build uniform strategy
-	var strength = 0;
-	while (strength == 0) {//Math.random() may have returned 0 for every entry
-		var MAX_BUCKET_VALUE = Math.floor(Number.MAX_SAFE_INTEGER / num_buckets);//avoid integer overflow when suming
-		var strategy = new Array();
-		for (var i = 0 ; i != num_buckets ; ++i) {
-			var current = Math.floor(MAX_BUCKET_VALUE * Math.random());
-			strategy.push(current);
-			strength += current;
-		}
-	}
-
-	// normalize strategy
-	var normalized_strength = 0;
-	for (var i = 0 ; i != num_buckets ; ++i) {
-		var ratio = 1. * total_population / strength;
-		strategy[i] = Math.floor(ratio * strategy[i]);
-		normalized_strength += strategy[i];
-	}
-
-	// add missing population
-	for (var s = normalized_strength ; s != total_population ; ++s) {
-		++strategy[Math.floor(num_buckets * Math.random())]
-	}
-	return strategy;
+	var MAX_BUCKET_VALUE = Math.floor(Number.MAX_SAFE_INTEGER / num_buckets);//avoid integer overflow when suming
+	var strategy = generate_n(num_buckets, () => Math.floor(MAX_BUCKET_VALUE * Math.random()));
+	return normalize_it_to(total_population, strategy);;
 }
 
 function sorted_against(input, values, comparator) {
@@ -224,10 +220,11 @@ function derive_from_parents(parents) {
 
 	var generate_id = () => Math.floor(parents.length * Math.random());
 	var parent_id = () => Math.random() < 0.5 ? 0 : 1;
-
+	
+	var population = accumulate(parents[0], 0, (acc, cur) => acc + cur);
 	var familly = [parents[generate_id()], parents[generate_id()]];
 	var idx = 0;
-	var derived = generate_n(parents[0].length, () => familly[parent_id()][idx++]);
+	var derived = normalize_it_to(population, generate_n(parents[0].length, () => familly[parent_id()][idx++]));
 	return mutated_strategy(derived);
 }
 
