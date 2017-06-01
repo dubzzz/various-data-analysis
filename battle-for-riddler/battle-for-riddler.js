@@ -1,3 +1,21 @@
+function normalize_it_to(total_population, array) {
+	var strength = accumulate(array, 0, (acc, cur) => acc + cur);
+	var ratio = strength == 0 ? 1 : 1. * total_population / strength;
+
+	// normalize
+	var normalized_strength = 0;
+	for (var i = 0 ; i != array.length ; ++i) {
+		array[i] = Math.floor(ratio * array[i]);
+		normalized_strength += array[i];
+	}
+
+	// add missing population
+	for (var s = normalized_strength ; s != total_population ; ++s) {
+		++array[Math.floor(num_buckets * Math.random())]
+	}
+	return array;
+}
+
 function spread_accross_buckets(total_population, num_buckets) {
 	/**
 	 * Spread <total_population> accross <num_buckets> slots
@@ -11,31 +29,9 @@ function spread_accross_buckets(total_population, num_buckets) {
 	 * - sum of output = <total_population>
 	 */
 
-	// build uniform strategy
-	var strength = 0;
-	while (strength == 0) {//Math.random() may have returned 0 for every entry
-		var MAX_BUCKET_VALUE = Math.floor(Number.MAX_SAFE_INTEGER / num_buckets);//avoid integer overflow when suming
-		var strategy = new Array();
-		for (var i = 0 ; i != num_buckets ; ++i) {
-			var current = Math.floor(MAX_BUCKET_VALUE * Math.random());
-			strategy.push(current);
-			strength += current;
-		}
-	}
-
-	// normalize strategy
-	var normalized_strength = 0;
-	for (var i = 0 ; i != num_buckets ; ++i) {
-		var ratio = 1. * total_population / strength;
-		strategy[i] = Math.floor(ratio * strategy[i]);
-		normalized_strength += strategy[i];
-	}
-
-	// add missing population
-	for (var s = normalized_strength ; s != total_population ; ++s) {
-		++strategy[Math.floor(num_buckets * Math.random())]
-	}
-	return strategy;
+	var MAX_BUCKET_VALUE = Math.floor(Number.MAX_SAFE_INTEGER / num_buckets);//avoid integer overflow when suming
+	var strategy = generate_n(num_buckets, () => Math.floor(MAX_BUCKET_VALUE * Math.random()));
+	return normalize_it_to(total_population, strategy);;
 }
 
 function sorted_against(input, values, comparator) {
@@ -71,9 +67,8 @@ function max_against(input, values) {
 
 var STRATEGY_POPULATION = 100;
 var STRATEGY_SIZE = 10;
-var MAX_MUTATIONS = 10;
+var MAX_MUTATIONS = 2;
 var PERCENT_KEPT = 10;
-var PERCENT_MUTATE = 80;
 
 var BATTLE_WIN = 3;
 var BATTLE_EQUALITY = 1;
@@ -206,7 +201,7 @@ function mutated_strategy(strategy) {
 	 */
 
 	var mutated = strategy.slice();
-	var num_mutations = 1 + Math.floor(MAX_MUTATIONS * Math.random());
+	var num_mutations = Math.floor((MAX_MUTATIONS +1) * Math.random());
 	for (var i = 0 ; i != num_mutations ; ++i) {
 		var idx1 = Math.floor(strategy.length * Math.random());
 		var idx2 = Math.floor(strategy.length * Math.random());
@@ -218,20 +213,29 @@ function mutated_strategy(strategy) {
 	return mutated;
 }
 
+function derive_from_parents(parents) {
+	/**
+	 * Derive two <parents> into a mutated version
+	 */
+
+	var generate_id = () => Math.floor(parents.length * Math.random());
+	var parent_id = () => Math.random() < 0.5 ? 0 : 1;
+	
+	var population = accumulate(parents[0], 0, (acc, cur) => acc + cur);
+	var familly = [parents[generate_id()], parents[generate_id()]];
+	var idx = 0;
+	var derived = normalize_it_to(population, generate_n(parents[0].length, () => familly[parent_id()][idx++]));
+	return mutated_strategy(derived);
+}
+
 function mutated_strategies(strategies, trainer) {
 	var scores = accumulate(strategies, [], (acc, s) => { acc.push(trainer(s, strategies)); return acc; });
 	var sorted = sorted_against(strategies, scores, (a,b) => b-a);
 
 	var NUM_KEPT_STRATEGIES = Math.floor(strategies.length * PERCENT_KEPT / 100.);
-	var NUM_MUTATE_STRATEGIES = Math.floor(strategies.length * PERCENT_MUTATE / 100.);
-	var NUM_UPDATED = NUM_KEPT_STRATEGIES + NUM_MUTATE_STRATEGIES;
-
-	for (var i = NUM_KEPT_STRATEGIES ; i != NUM_UPDATED ; ++i) {
-		sorted[i] = mutated_strategy(sorted[i]);
-	}
-	for (var i = NUM_UPDATED ; i != sorted.length ; ++i) {
-		var mutate_from = Math.floor(NUM_KEPT_STRATEGIES * Math.random());
-		sorted[i] = mutated_strategy(sorted[mutate_from]);
+	var parents = sorted.slice(0, NUM_KEPT_STRATEGIES);
+	for (var i = 0 ; i != sorted.length ; ++i) {
+		sorted[i] = derive_from_parents(parents);
 	}
 	return sorted;
 }
@@ -276,7 +280,10 @@ function suggest_strategy_retry(retries, trainer) {
 		var previous_best = current_best;
 		current_best = trainer(best_strategy(strategies, trainer), strategies);
 		if (previous_best < current_best) { num_failures = 0; }
-		else { ++num_failures; }
+		else {
+			++num_failures;
+			current_best = previous_best;
+		}
 	}
 
 	return best_strategy(strategies, trainer);
