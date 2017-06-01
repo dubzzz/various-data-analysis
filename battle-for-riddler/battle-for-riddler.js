@@ -11,7 +11,7 @@ function normalize_it_to(total_population, array) {
 
 	// add missing population
 	for (var s = normalized_strength ; s != total_population ; ++s) {
-		++array[Math.floor(num_buckets * Math.random())]
+		++array[Math.floor(array.length * Math.random())]
 	}
 	return array;
 }
