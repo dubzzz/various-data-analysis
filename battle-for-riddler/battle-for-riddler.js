@@ -280,7 +280,10 @@ function suggest_strategy_retry(retries, trainer) {
 		var previous_best = current_best;
 		current_best = trainer(best_strategy(strategies, trainer), strategies);
 		if (previous_best < current_best) { num_failures = 0; }
-		else { ++num_failures; }
+		else {
+			++num_failures;
+			current_best = previous_best;
+		}
 	}
 
 	return best_strategy(strategies, trainer);
