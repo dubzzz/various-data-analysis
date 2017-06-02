@@ -140,6 +140,71 @@ QUnit.test("generate multiple strategies", function(assert) {
 	}
 });
 
+QUnit.module("count_better_strategies");
+
+QUnit.test("empty strategy", function(assert) {
+	assert.strictEqual(count_better_strategies([]), 1, "itself is the only better strategy");
+});
+
+QUnit.test("one entry strategy", function(assert) {
+	assert.strictEqual(count_better_strategies([10]), 1, "itself is the only better strategy");
+});
+
+QUnit.test("worst strategy", function(assert) {
+	// all possible combinations are better than this one
+	// strictly better: [0,1,0] or [0,0,1]
+	// same           : [1,0,0]
+	assert.strictEqual(count_better_strategies([1, 0, 0]), 3, "right number of better strategies");
+
+	// strictly better: [0,2,0] or [0,0,2] or [1,1,0] or [1,0,1] or [0,1,1]
+	// same           : [2,0,0]
+	assert.strictEqual(count_better_strategies([2, 0, 0]), 6, "right number of better strategies");
+});
+
+QUnit.test("worst game strategy", function(assert) {
+	assert.strictEqual(count_better_strategies([2, 0]), 3, "right number of better strategies");
+	assert.strictEqual(count_better_strategies([2, 0, 0]), 6, "right number of better strategies"); // * (2/2 +1)
+	assert.strictEqual(count_better_strategies([2, 0, 0, 0]), 10, "right number of better strategies"); // * (2/3 +1)
+	assert.strictEqual(count_better_strategies([2, 0, 0, 0, 0]), 15, "right number of better strategies"); // * (2/4 +1)
+	assert.strictEqual(count_better_strategies([2, 0, 0, 0, 0, 0]), 21, "right number of better strategies"); // ...
+
+	assert.strictEqual(count_better_strategies([100, 0]), 101, "right number of better strategies");
+	assert.strictEqual(count_better_strategies([100, 0, 0]), 5151, "right number of better strategies"); // * (100/2 +1)
+	assert.strictEqual(count_better_strategies([100, 0, 0, 0]), 176851, "right number of better strategies"); // * (100/3 +1)
+	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0]), 4598126, "right number of better strategies"); // * (100/4 +1)
+	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0, 0]), 96560646, "right number of better strategies"); // ...
+	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0, 0, 0]), 1705904746, "right number of better strategies");
+	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0, 0, 0, 0]), 26075972546, "right number of better strategies");
+	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0, 0, 0, 0, 0]), 352025629371, "right number of better strategies");
+	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 4263421511271, "right number of better strategies");
+});
+
+QUnit.test("only one strictly better strategy", function(assert) {
+	// strictly better: [0,0,2]
+	// same           : [0,1,1]
+	assert.strictEqual(count_better_strategies([0, 1, 1]), 2, "right number of better strategies");
+});
+
+QUnit.test("nothing is strictly better", function(assert) {
+	// same           : [0,0,2] or [1,1,0]
+	assert.strictEqual(count_better_strategies([0, 0, 2]), 2, "right number of better strategies");
+
+	// same           : [0,0,3] or [1,2,0] or [2,1,0] or [1,1,1]
+	assert.strictEqual(count_better_strategies([0, 0, 3]), 4, "right number of better strategies");
+});
+
+QUnit.test("multiple better strategies", function(assert) {
+	// strictly better: [0,0,3] or [0,1,2] or [1,0,2] or [0,2,1] or [1,1,1]
+	// same           : [2,0,1]
+	assert.strictEqual(count_better_strategies([2, 0, 1]), 6, "right number of better strategies");
+
+	// strictly better: [0,0,1,2] or [0,1,0,2]
+	//                  or [0,0,2,1] or [2,0,0,1] or [0,2,0,1] or [1,1,0,1] or [0,1,1,1] or [1,0,1,1]
+	//                  or [0,0,3,0] or [0,1,2,0] or [1,0,2,0] or [0,2,1,0] or [1,1,1,0]
+	// same           : [0,0,0,3] or [1,0,0,2] or [2,0,1,0]
+	assert.strictEqual(count_better_strategies([2, 0, 1, 0]), 16, "right number of better strategies");
+});
+
 QUnit.module("run_battle");
 
 QUnit.test("battle on empty strategies", function(assert) {
@@ -209,69 +274,4 @@ QUnit.test("empty panel", function(assert) {
 
 QUnit.test("real panel", function(assert) {
 	assert.strictEqual(score_against_panel([[3,0,0],[0,3,0],[0,0,3],[0,1,2]], [1,1,1]), BATTLE_WIN + BATTLE_WIN + BATTLE_EQUALITY + 0, "score should be to 2x wins + 1x equality");
-});
-
-QUnit.module("count_better_strategies");
-
-QUnit.test("empty strategy", function(assert) {
-	assert.strictEqual(count_better_strategies([]), 1, "itself is the only better strategy");
-});
-
-QUnit.test("one entry strategy", function(assert) {
-	assert.strictEqual(count_better_strategies([10]), 1, "itself is the only better strategy");
-});
-
-QUnit.test("worst strategy", function(assert) {
-	// all possible combinations are better than this one
-	// strictly better: [0,1,0] or [0,0,1]
-	// same           : [1,0,0]
-	assert.strictEqual(count_better_strategies([1, 0, 0]), 3, "right number of better strategies");
-
-	// strictly better: [0,2,0] or [0,0,2] or [1,1,0] or [1,0,1] or [0,1,1]
-	// same           : [2,0,0]
-	assert.strictEqual(count_better_strategies([2, 0, 0]), 6, "right number of better strategies");
-});
-
-QUnit.test("worst game strategy", function(assert) {
-	assert.strictEqual(count_better_strategies([2, 0]), 3, "right number of better strategies");
-	assert.strictEqual(count_better_strategies([2, 0, 0]), 6, "right number of better strategies"); // * (2/2 +1)
-	assert.strictEqual(count_better_strategies([2, 0, 0, 0]), 10, "right number of better strategies"); // * (2/3 +1)
-	assert.strictEqual(count_better_strategies([2, 0, 0, 0, 0]), 15, "right number of better strategies"); // * (2/4 +1)
-	assert.strictEqual(count_better_strategies([2, 0, 0, 0, 0, 0]), 21, "right number of better strategies"); // ...
-
-	assert.strictEqual(count_better_strategies([100, 0]), 101, "right number of better strategies");
-	assert.strictEqual(count_better_strategies([100, 0, 0]), 5151, "right number of better strategies"); // * (100/2 +1)
-	assert.strictEqual(count_better_strategies([100, 0, 0, 0]), 176851, "right number of better strategies"); // * (100/3 +1)
-	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0]), 4598126, "right number of better strategies"); // * (100/4 +1)
-	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0, 0]), 96560646, "right number of better strategies"); // ...
-	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0, 0, 0]), 1705904746, "right number of better strategies");
-	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0, 0, 0, 0]), 26075972546, "right number of better strategies");
-	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0, 0, 0, 0, 0]), 352025629371, "right number of better strategies");
-	assert.strictEqual(count_better_strategies([100, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 4263421511271, "right number of better strategies");
-});
-
-QUnit.test("only one strictly better strategy", function(assert) {
-	// strictly better: [0,0,2]
-	// same           : [0,1,1]
-	assert.strictEqual(count_better_strategies([0, 1, 1]), 2, "right number of better strategies");
-});
-
-QUnit.test("nothing is strictly better", function(assert) {
-	// same           : [0,0,2] or [1,1,0]
-	assert.strictEqual(count_better_strategies([0, 0, 2]), 2, "right number of better strategies");
-
-	// same           : [0,0,3] or [1,2,0] or [2,1,0] or [1,1,1]
-	assert.strictEqual(count_better_strategies([0, 0, 3]), 4, "right number of better strategies");
-});
-
-QUnit.test("mulitiple better strategies", function(assert) {
-	// strictly better: [0,0,3] or [0,1,2] or [1,0,2] or [0,2,1] or [1,1,1]
-	// same           : [2,0,1]
-	assert.strictEqual(count_better_strategies([2, 0, 1]), 6, "right number of better strategies");
-
-	// strictly better: [0,0,1,2] or [0,1,0,2]
-	//                  or [0,0,2,1] or [2,0,0,1] or [0,2,0,1] or [1,1,0,1] or [0,1,1,1] or [1,0,1,1]
-	//                  or [0,0,3,0] or [0,1,2,0] or [1,0,2,0] or [0,2,1,0] or [1,1,1,0]
-	// same           : [0,0,0,3] or [1,0,0,2] or [2,0,1,0]
-	assert.strictEqual(count_better_strategies([2, 0, 1, 0]), 16, "right number of better strategies");
 });
