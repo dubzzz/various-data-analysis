@@ -258,7 +258,7 @@ function make_panel_trainer() {
 }
 
 function make_self_trained_trainer() {
-	return (strategy, others) => score_against_panel(strategy, others);
+	return (strategy, others) => score_against_panel(others, strategy);
 }
 
 /*********************************/
@@ -353,4 +353,39 @@ function suggest_strategy_retry(retries, trainer) {
 	}
 
 	return best_strategy(strategies, trainer);
+}
+
+/*********************************/
+/*     Gradient descent -like    */
+/*********************************/
+
+function suggest_strategy_descent(trainer) {
+	var prev_strategy = undefined;
+	var strategy = generate_strategy();
+	var score = trainer(strategy, []);
+	var total_population = accumulate(strategy, 0, (acc, cur) => acc + cur);
+	var make_move = (st, i, j) => { --st[i]; ++st[j]; }
+
+	while (prev_strategy !== strategy) {
+		console.log(strategy, " with score ", score);
+		var cloned = strategy.slice();
+		var prev_strategy = strategy;
+
+		// test all possible switchs (remove from i, add to j)
+		for (var i = 0 ; i != strategy.length ; ++i) {
+			if (strategy[i] == 0) { continue; }
+			for (var j = 0 ; j != strategy.length ; ++j) {
+				if (i == j) { continue; }
+				if (strategy[j] == total_population) { continue; }
+				make_move(cloned, i, j);
+				var s = trainer(cloned, []);
+				if (s > score) {
+					strategy = cloned.slice();
+					score = s;
+				}
+				make_move(cloned, j, i);
+			}
+		}
+	}
+	return strategy;
 }
