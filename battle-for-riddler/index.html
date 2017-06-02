@@ -42,6 +42,7 @@
         $f.attr("max", "100");
         $fields.append($f);
       }
+      $("#generate").text($("#generate").text() + " (" + NUM_PANEL_STRATEGIES + " members)")
 
       function generate_with_trainer(trainer) {
         var suggestion = $("#switch_generator").is(":checked")
