@@ -1,6 +1,21 @@
 QUnit.start();
 
-QUnit.module("spread_accross_buckets");
+	/**
+	 * Normalize <array> to <total_population>
+	 * - <total_population> must be an Integer
+	 * - <array> must be an array constaining at least one element
+	 *
+	 * An <array> with null values only is supposed to be equivalent to [1, 1, ... , 1]
+	 *
+	 * Output satisfy:
+	 * - array having the same size as <array>
+	 * - it contains only integers
+	 * - the sum of its integers is equal to total_population
+	 * - all its elements satisfy: Math.floor(ratio * array[i]) <= element_value <= Math.ceil(ratio * array[i])
+	 *     where ratio = <total_population> / sum(<array>)
+	 */
+
+QUnit.module("normalize_array");
 
 function check_spread_accross_buckets(assert, generated, population, num_buckets) {
 	assert.ok(Array.isArray(generated), "output is an array");
@@ -9,6 +24,45 @@ function check_spread_accross_buckets(assert, generated, population, num_buckets
 	assert.ok(all_of(generated, i => i >= 0), "values are positive");
 	assert.strictEqual(accumulate(generated, 0, (acc, cur) => acc + cur), population, "values sum to " + population);
 }
+
+function check_normalize_array(assert, population, array) {
+	var out = normalize_array(population, array);
+	check_spread_accross_buckets(assert, out, population, array.length);
+
+	var strength = accumulate(array, 0, (acc, cur) => acc + cur);
+	if (strength == 0) {
+		array = generate_n(array.length, () => 1);
+		strength = array.length;
+	}
+	var ratio = 1. * population / strength;
+	for (var idx = 0 ; idx != array.length ; ++idx) {
+		var min_value = Math.floor(ratio * array[idx]);
+		var max_value = Math.ceil(ratio * array[idx]);
+		assert.ok(min_value <= out[idx] && out[idx] <= max_value, "normalized value at #" + idx + " must be between " + min_value + " (floor) and " + max_value + " (ceil)");
+	}
+}
+
+QUnit.test("zero values only", function(assert) {
+	check_normalize_array(assert, 4, [0,0,0,0]);
+});
+
+QUnit.test("zero values only, rounding issue", function(assert) {
+	check_normalize_array(assert, 4, [0,0,0]);
+});
+
+QUnit.test("no rounding issue", function(assert) {
+	check_normalize_array(assert, 12, [1,2,3]);
+});
+
+QUnit.test("rounding issue", function(assert) {
+	check_normalize_array(assert, 10, [1,2,3]);
+});
+
+QUnit.test("not enough elements to fill everyone", function(assert) {
+	check_normalize_array(assert, 1, [1,2,3]);
+});
+
+QUnit.module("spread_accross_buckets");
 
 QUnit.test("with non null values", function(assert) {
 	check_spread_accross_buckets(assert, spread_accross_buckets(101, 10), 101, 10);

@@ -1,19 +1,46 @@
-function normalize_it_to(total_population, array) {
+function normalize_array(total_population, array) {
+	/**
+	 * Normalize <array> to <total_population>
+	 * - <total_population> must be an Integer
+	 * - <array> must be an array constaining at least one element
+	 *
+	 * An <array> with null values only is supposed to be equivalent to [1, 1, ... , 1]
+	 *
+	 * Output satisfy:
+	 * - array having the same size as <array>
+	 * - it contains only integers
+	 * - the sum of its integers is equal to total_population
+	 * - all its elements satisfy: Math.floor(ratio * array[i]) <= element_value <= Math.ceil(ratio * array[i])
+	 *     where ratio = <total_population> / sum(<array>)
+	 */
+
 	var strength = accumulate(array, 0, (acc, cur) => acc + cur);
-	var ratio = strength == 0 ? 1 : 1. * total_population / strength;
+	var ratio = 1. * total_population / (strength == 0 ? array.length : strength);
+
+	var out = [];
+	var gaps = [];
 
 	// normalize
 	var normalized_strength = 0;
 	for (var i = 0 ; i != array.length ; ++i) {
-		array[i] = Math.floor(ratio * array[i]);
-		normalized_strength += array[i];
+		var inf_value = Math.floor(strength == 0 ? ratio : ratio * array[i]);
+		var sup_value = Math.ceil(strength == 0 ? ratio : ratio * array[i]);
+
+		out.push(inf_value);
+		normalized_strength += inf_value;
+		for (var j = inf_value ; j != sup_value ; ++j) {
+			gaps.push(i);
+		}
 	}
 
 	// add missing population
 	for (var s = normalized_strength ; s != total_population ; ++s) {
-		++array[Math.floor(array.length * Math.random())]
+		var id = Math.floor(gaps.length * Math.random());
+		++out[gaps[id]];
+		gaps[id] = gaps[gaps.length -1];
+		gaps.splice(-1);
 	}
-	return array;
+	return out;
 }
 
 function spread_accross_buckets(total_population, num_buckets) {
@@ -31,7 +58,7 @@ function spread_accross_buckets(total_population, num_buckets) {
 
 	var MAX_BUCKET_VALUE = Math.floor(Number.MAX_SAFE_INTEGER / num_buckets);//avoid integer overflow when suming
 	var strategy = generate_n(num_buckets, () => Math.floor(MAX_BUCKET_VALUE * Math.random()));
-	return normalize_it_to(total_population, strategy);;
+	return normalize_array(total_population, strategy);;
 }
 
 function sorted_against(input, values, comparator) {
@@ -224,7 +251,7 @@ function derive_from_parents(parents) {
 	var population = accumulate(parents[0], 0, (acc, cur) => acc + cur);
 	var familly = [parents[generate_id()], parents[generate_id()]];
 	var idx = 0;
-	var derived = normalize_it_to(population, generate_n(parents[0].length, () => familly[parent_id()][idx++]));
+	var derived = normalize_array(population, generate_n(parents[0].length, () => familly[parent_id()][idx++]));
 	return mutated_strategy(derived);
 }
 
