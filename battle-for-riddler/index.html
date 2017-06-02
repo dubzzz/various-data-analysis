@@ -17,11 +17,16 @@
         <button type="button" id="generate_minimizer">Minimize risk trainer</button>
         <button type="button" id="generate_self_trained">Self-trained trainer</button>
         <br/>
+        <button type="button" id="generate_crazy">Panel trainer</button>
+        <button type="button" id="generate_self_trained_crazy">Self-trained trainer</button>
+        <br/><br/>
         <input type="checkbox" id="switch_generator" /> Checked = &lt;Genetic algorithm&gt;, Unchecked = &lt;Gradient descent&gt;
       </div>
       <div>
         <h2>Running battle against...</h2>
         <button type="button" id="evaluate_contest">Contest members</button>
+        <button type="button" id="evaluate_best80">Min 80% wins</button>
+        <button type="button" id="evaluate_best90">Min 90% wins</button>
         <button type="button" id="evaluate_random100">0.1k randoms</button>
         <button type="button" id="evaluate_random1000">1k randoms</button>
         <button type="button" id="evaluate_random10000">10k randoms</button>
@@ -30,6 +35,8 @@
 
     <script type="text/javascript">
       var NUM_FIELDS = 10;
+      var CRAZY_STRENGTH = 5;
+      var PERCENT_COMBINATION_BETTER_CRAZY = 100. / CRAZY_STRENGTH;
 
       var $fields = $("#castles");
       for (var idx = 0 ; idx != NUM_FIELDS ; ++idx) {
@@ -42,11 +49,13 @@
         $f.attr("max", "100");
         $fields.append($f);
       }
-      $("#generate").text($("#generate").text() + " (" + NUM_PANEL_STRATEGIES + " members)")
+      $("#generate").text($("#generate").text() + " (" + NUM_PANEL_STRATEGIES + " members)");
+      $("#generate_crazy").text($("#generate_crazy").text() + " (" + NUM_CRAZY_PANEL_STRATEGIES + " members winning " + Number(100. - PERCENT_COMBINATION_BETTER_CRAZY).toFixed(0) + "%)");
+      $("#generate_self_trained_crazy").text($("#generate_self_trained_crazy").text() + " (members winning " + Number(100. - PERCENT_COMBINATION_BETTER_CRAZY).toFixed(0) + "%)");
 
-      function generate_with_trainer(trainer) {
+      function generate_with_trainer(trainer, strategy_gen) {
         var suggestion = $("#switch_generator").is(":checked")
-            ? suggest_strategy_retry(10, trainer)
+            ? suggest_strategy_retry(10, trainer, strategy_gen)
             : suggest_strategy_descent(trainer);
         for (var i = 0 ; i != NUM_FIELDS ; ++i) {
           $("#castle" + i).val(suggestion[i]);
@@ -64,11 +73,17 @@
       $("#generate").click(function() {
           generate_with_trainer(make_panel_trainer());
       });
+      $("#generate_crazy").click(function() {
+          generate_with_trainer(make_panel_trainer(CRAZY_STRENGTH));
+      });
       $("#generate_minimizer").click(function() {
           generate_with_trainer(make_minimizer_trainer(STRATEGY_POPULATION, STRATEGY_SIZE));
       });
       $("#generate_self_trained").click(function() {
           generate_with_trainer(make_self_trained_trainer());
+      });
+      $("#generate_self_trained_crazy").click(function() {
+          generate_with_trainer(make_self_trained_trainer(), (num) => generate_crazy_strategies(num, CRAZY_STRENGTH));
       });
 
       function evaluate_against(comparison_dataset) {
@@ -96,6 +111,12 @@
 
       $("#evaluate_contest").click(function() {
           evaluate_against(dataset.slice());
+      });
+      $("#evaluate_best80").click(function() {
+          evaluate_against(generate_crazy_strategies(100, 100/(100-80)));
+      });
+      $("#evaluate_best90").click(function() {
+          evaluate_against(generate_crazy_strategies(100, 100/(100-90)));
       });
       $("#evaluate_random100").click(function() {
           evaluate_against(generate_strategies(100));

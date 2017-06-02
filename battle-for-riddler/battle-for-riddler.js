@@ -239,10 +239,27 @@ function best_strategy(strategies, trainer) {
 	return max_against(strategies, scores);
 }
 
+function make_crazier(strategy, trainer, min_score) {
+	var crazier = strategy.slice();
+	var current_score = trainer(crazier);
+	while (current_score < min_score) {
+		var i = Math.floor(crazier.length * Math.random());
+		var j = Math.floor(crazier.length * Math.random());
+		if (i == j || crazier[i] == 0) { continue; }
+
+		--crazier[i]; ++crazier[j];
+		var new_score = trainer(crazier);
+		if (new_score > current_score) { current_score = new_score; }
+		else { ++crazier[i]; --crazier[j]; }
+	}
+	return crazier;
+}
+
 /*********************************/
 /*      Measures of success      */
 /*********************************/
 
+var NUM_CRAZY_PANEL_STRATEGIES = 100;
 var NUM_PANEL_STRATEGIES = 1000;
 
 function make_minimizer_trainer(total_population, num_buckets) {
@@ -252,8 +269,16 @@ function make_minimizer_trainer(total_population, num_buckets) {
 	return (strategy, others) => worst_score / count_better_strategies(strategy);
 }
 
-function make_panel_trainer() {
-	var panel_strategies = generate_strategies(NUM_PANEL_STRATEGIES);
+function generate_crazy_strategies(num, min_score) {
+	var panel_strategies = generate_strategies(num);
+	for (var i = 0 ; i != panel_strategies.length ; ++i) {
+		panel_strategies[i] = make_crazier(panel_strategies[i], make_minimizer_trainer(STRATEGY_POPULATION, STRATEGY_SIZE), min_score);
+	}
+	return panel_strategies;
+}
+
+function make_panel_trainer(min_crazy) {
+	var panel_strategies = min_crazy !== undefined ? generate_crazy_strategies(NUM_CRAZY_PANEL_STRATEGIES, min_crazy) : generate_strategies(NUM_PANEL_STRATEGIES);
 	return (strategy, others) => score_against_panel(panel_strategies, strategy);
 }
 
@@ -328,16 +353,24 @@ function make_next_generation(strategies, trainer) {
 
 var NUM_STRATEGIES = 100;
 
-function suggest_strategy(steps, trainer) {
-	var strategies = generate_strategies(NUM_STRATEGIES);
+function suggest_strategy(steps, trainer, strategy_gen) {
+	if (strategy_gen === undefined) {
+		strategy_gen = (num) => generate_strategy(num);
+	}
+
+	var strategies = strategy_gen(NUM_STRATEGIES);
 	while (steps-- > 0) {
 		strategies = make_next_generation(strategies, trainer).strategies;
 	}
 	return best_strategy(strategies, trainer);
 }
 
-function suggest_strategy_retry(retries, trainer) {
-	var strategies = generate_strategies(NUM_STRATEGIES);	
+function suggest_strategy_retry(retries, trainer, strategy_gen) {
+	if (strategy_gen === undefined) {
+		strategy_gen = (num) => generate_strategy(num);
+	}
+
+	var strategies = strategy_gen(NUM_STRATEGIES);	
 	var current_best = 0;
 	var num_failures = 0;
 	while (num_failures < retries) {
@@ -363,7 +396,6 @@ function suggest_strategy_descent(trainer) {
 	var prev_strategy = undefined;
 	var strategy = generate_strategy();
 	var score = trainer(strategy, []);
-	var total_population = accumulate(strategy, 0, (acc, cur) => acc + cur);
 	var make_move = (st, i, j) => { --st[i]; ++st[j]; }
 
 	while (prev_strategy !== strategy) {
@@ -375,8 +407,7 @@ function suggest_strategy_descent(trainer) {
 		for (var i = 0 ; i != strategy.length ; ++i) {
 			if (strategy[i] == 0) { continue; }
 			for (var j = 0 ; j != strategy.length ; ++j) {
-				if (i == j) { continue; }
-				if (strategy[j] == total_population) { continue; }
+				if (i == j) { continue; } //[j] < total_population because of [i]
 				make_move(cloned, i, j);
 				var s = trainer(cloned, []);
 				if (s > score) {
