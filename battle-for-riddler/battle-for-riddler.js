@@ -310,9 +310,7 @@ function suggest_strategy(steps, trainer) {
 }
 
 function suggest_strategy_retry(retries, trainer) {
-	var strategies = generate_strategies(NUM_STRATEGIES);
-	var panel_strategies = generate_strategies(NUM_PANEL_STRATEGIES);
-	
+	var strategies = generate_strategies(NUM_STRATEGIES);	
 	var current_best = 0;
 	var num_failures = 0;
 	while (num_failures < retries) {
