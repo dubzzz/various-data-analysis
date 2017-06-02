@@ -233,6 +233,24 @@ QUnit.test("detect possible rounding issue", function(assert) {
 	assert.strictEqual(run_battle([1,1,0], [0,0,1]), 0, "no winner");
 });
 
+QUnit.module("score_battle");
+
+QUnit.test("expected outputs", function(assert) {
+	assert.deepEqual(score_battle([3,0,0], [1,1,1]), [0,BATTLE_WIN], "2nd wins");
+	assert.deepEqual(score_battle([1,1,1],[3,0,0]), [BATTLE_WIN,0], "1st wins");
+	assert.deepEqual(score_battle([1,1,1],[1,1,1]), [BATTLE_EQUALITY,BATTLE_EQUALITY], "no winner");
+});
+
+QUnit.module("score_against_panel");
+
+QUnit.test("empty panel", function(assert) {
+	assert.strictEqual(score_against_panel([], [1,1,1]), 0, "null score");
+});
+
+QUnit.test("real panel", function(assert) {
+	assert.strictEqual(score_against_panel([[3,0,0],[0,3,0],[0,0,3],[0,1,2]], [1,1,1]), BATTLE_WIN + BATTLE_WIN + BATTLE_EQUALITY + 0, "score should be to 2x wins + 1x equality");
+});
+
 QUnit.module("mutated_strategy");
 
 QUnit.test("should not alter the input", function(assert) {
@@ -256,22 +274,4 @@ QUnit.test("same population and same size as input", function(assert) {
 QUnit.test("output remains a valid strategy", function(assert) {
 	var out = mutated_strategy([5,8,1,10,0,6,12]);
 	check_random_normalized_array(assert, out, 42, 7);
-});
-
-QUnit.module("score_battle");
-
-QUnit.test("expected outputs", function(assert) {
-	assert.deepEqual(score_battle([3,0,0], [1,1,1]), [0,BATTLE_WIN], "2nd wins");
-	assert.deepEqual(score_battle([1,1,1],[3,0,0]), [BATTLE_WIN,0], "1st wins");
-	assert.deepEqual(score_battle([1,1,1],[1,1,1]), [BATTLE_EQUALITY,BATTLE_EQUALITY], "no winner");
-});
-
-QUnit.module("score_against_panel");
-
-QUnit.test("empty panel", function(assert) {
-	assert.strictEqual(score_against_panel([], [1,1,1]), 0, "null score");
-});
-
-QUnit.test("real panel", function(assert) {
-	assert.strictEqual(score_against_panel([[3,0,0],[0,3,0],[0,0,3],[0,1,2]], [1,1,1]), BATTLE_WIN + BATTLE_WIN + BATTLE_EQUALITY + 0, "score should be to 2x wins + 1x equality");
 });
