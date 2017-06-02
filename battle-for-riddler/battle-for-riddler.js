@@ -43,7 +43,7 @@ function normalize_array(total_population, array) {
 	return out;
 }
 
-function spread_accross_buckets(total_population, num_buckets) {
+function random_normalized_array(total_population, num_buckets) {
 	/**
 	 * Spread <total_population> accross <num_buckets> slots
 	 * Population is randomly spread accross buckets
@@ -56,9 +56,7 @@ function spread_accross_buckets(total_population, num_buckets) {
 	 * - sum of output = <total_population>
 	 */
 
-	var MAX_BUCKET_VALUE = Math.floor(Number.MAX_SAFE_INTEGER / num_buckets);//avoid integer overflow when suming
-	var strategy = generate_n(num_buckets, () => Math.floor(MAX_BUCKET_VALUE * Math.random()));
-	return normalize_array(total_population, strategy);;
+	return normalize_array(total_population, generate_n(num_buckets, () => Math.random()));
 }
 
 function sorted_against(input, values, comparator) {
@@ -103,7 +101,7 @@ var BATTLE_EQUALITY = 1;
 function generate_strategies(num) {
 	var strategies = [];
 	for (var i = 0 ; i != num ; ++i) {
-		strategies.push(spread_accross_buckets(STRATEGY_POPULATION, STRATEGY_SIZE));
+		strategies.push(random_normalized_array(STRATEGY_POPULATION, STRATEGY_SIZE));
 	}
 	return strategies;
 }

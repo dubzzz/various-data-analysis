@@ -17,7 +17,7 @@ QUnit.start();
 
 QUnit.module("normalize_array");
 
-function check_spread_accross_buckets(assert, generated, population, num_buckets) {
+function check_random_normalized_array(assert, generated, population, num_buckets) {
 	assert.ok(Array.isArray(generated), "output is an array");
 	assert.strictEqual(generated.length, num_buckets, "number of buckets should be " + num_buckets);
 	assert.ok(all_of(generated, i => Number.isInteger(i)), "values are integers");
@@ -27,7 +27,7 @@ function check_spread_accross_buckets(assert, generated, population, num_buckets
 
 function check_normalize_array(assert, population, array) {
 	var out = normalize_array(population, array);
-	check_spread_accross_buckets(assert, out, population, array.length);
+	check_random_normalized_array(assert, out, population, array.length);
 
 	var strength = accumulate(array, 0, (acc, cur) => acc + cur);
 	if (strength == 0) {
@@ -62,18 +62,22 @@ QUnit.test("not enough elements to fill everyone", function(assert) {
 	check_normalize_array(assert, 1, [1,2,3]);
 });
 
-QUnit.module("spread_accross_buckets");
+QUnit.test("input array contain doubles", function(assert) {
+	check_normalize_array(assert, 10, [1.5,2.8,3.14]);
+});
+
+QUnit.module("random_normalized_array");
 
 QUnit.test("with non null values", function(assert) {
-	check_spread_accross_buckets(assert, spread_accross_buckets(101, 10), 101, 10);
+	check_random_normalized_array(assert, random_normalized_array(101, 10), 101, 10);
 });
 
 QUnit.test("with only one of population", function(assert) {
-	check_spread_accross_buckets(assert, spread_accross_buckets(1, 10), 1, 10);
+	check_random_normalized_array(assert, random_normalized_array(1, 10), 1, 10);
 });
 
 QUnit.test("with only one bucket", function(assert) {
-	check_spread_accross_buckets(assert, spread_accross_buckets(101, 1), 101, 1);
+	check_random_normalized_array(assert, random_normalized_array(101, 1), 101, 1);
 });
 
 QUnit.module("generate_strategies");
@@ -89,7 +93,7 @@ QUnit.test("generate one strategy", function(assert) {
 	assert.ok(Array.isArray(strategies), "output is an array");
 	assert.strictEqual(strategies.length, 1, "number of strategies should be 1");
 	for (var idx = 0 ; idx != strategies.length ; ++idx) {
-		check_spread_accross_buckets(assert, strategies[idx], STRATEGY_POPULATION, STRATEGY_SIZE);
+		check_random_normalized_array(assert, strategies[idx], STRATEGY_POPULATION, STRATEGY_SIZE);
 	}
 });
 
@@ -98,7 +102,7 @@ QUnit.test("generate multiple strategies", function(assert) {
 	assert.ok(Array.isArray(strategies), "output is an array");
 	assert.strictEqual(strategies.length, 42, "number of strategies should be 42");
 	for (var idx = 0 ; idx != strategies.length ; ++idx) {
-		check_spread_accross_buckets(assert, strategies[idx], STRATEGY_POPULATION, STRATEGY_SIZE);
+		check_random_normalized_array(assert, strategies[idx], STRATEGY_POPULATION, STRATEGY_SIZE);
 	}
 });
 
@@ -152,7 +156,7 @@ QUnit.test("same population and same size as input", function(assert) {
 
 QUnit.test("output remains a valid strategy", function(assert) {
 	var out = mutated_strategy([5,8,1,10,0,6,12]);
-	check_spread_accross_buckets(assert, out, 42, 7);
+	check_random_normalized_array(assert, out, 42, 7);
 });
 
 QUnit.module("score_battle");
