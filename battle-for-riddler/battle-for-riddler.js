@@ -1,3 +1,7 @@
+/*********************************/
+/*      Generic algorithms       */
+/*********************************/
+
 function normalize_array(total_population, array) {
 	/**
 	 * Normalize <array> to <total_population>
@@ -90,11 +94,12 @@ function max_against(input, values) {
 	return input[max_idx];
 }
 
+/*********************************/
+/*      Game specifications      */
+/*********************************/
+
 var STRATEGY_POPULATION = 100;
 var STRATEGY_SIZE = 10;
-var MAX_MUTATIONS = 2;
-var PERCENT_KEPT = 10;
-
 var BATTLE_WIN = 3;
 var BATTLE_EQUALITY = 1;
 
@@ -112,6 +117,60 @@ function generate_strategies(num) {
 	 */
 	return generate_n(num, () => generate_strategy());
 }
+
+function run_battle(st1, st2) {
+	/**
+	 * Run a battle between strategy <st1> and <st2>
+	 * <st1> and <st2> must have the same size (or number of buckets)
+	 * 
+	 * 1: st1 wins
+	 * 2: st2 wins
+	 * 0: no one wins
+	 */
+
+	var score1 = 0;
+	var score2 = 0;
+	for (var i = 0 ; i != st1.length ; ++i) {
+		if (st1[i] > st2[i]) { score1 += 2*(i+1); }
+		else if (st1[i] < st2[i]) { score2 += 2*(i+1); }
+		else {
+			score1 += i+1;
+			score2 += i+1;
+		}
+	}
+	return score1 < score2 ? 2 : (score1 > score2 ? 1 : 0);
+}
+
+function score_battle(st1, st2) {
+	/**
+	 * Compute the score of <st1>,<st2> for the battle facing <st1> to <st2>
+	 * 
+	 * Output is an array with first corresponding to <st1>'s score, second to <st2>'s
+	 * win    = BATTLE_WIN pts
+	 * nul    = BATTLE_EQUALITY pts
+	 * defeat = 0 pts
+	 */
+	var winner = run_battle(st1, st2);
+	if (winner == 1) { return [BATTLE_WIN, 0]; }
+	else if (winner == 2) { return [0, BATTLE_WIN]; }
+	else { return [BATTLE_EQUALITY, BATTLE_EQUALITY]; }
+}
+
+function score_against_panel(panel_strategies, strategy) {
+	/**
+	 * Compute the score of <strategy> facing all the strategies in <panel_strategies>
+	 * 
+	 * win    = BATTLE_WIN pts
+	 * nul    = BATTLE_EQUALITY pts
+	 * defeat = 0 pts
+	 */
+	return accumulate(panel_strategies, 0, (acc, s) => strategy === s ? acc : acc + score_battle(strategy, s)[0]);
+}
+
+/*********************************/
+/*       Helper functions        */
+/*    ( Measures of success )    */
+/*********************************/
 
 function count_better_strategies_helper(strategy, already_asked, num_buckets, total_population, doubled_target_score) {
 	/**
@@ -175,54 +234,40 @@ function count_better_strategies(strategy) {
 	return count_better_strategies_helper(strategy, already_asked, num_buckets, total_population, max_score);
 }
 
-function run_battle(st1, st2) {
-	/**
-	 * Run a battle between strategy <st1> and <st2>
-	 * <st1> and <st2> must have the same size (or number of buckets)
-	 * 
-	 * 1: st1 wins
-	 * 2: st2 wins
-	 * 0: no one wins
-	 */
-
-	var score1 = 0;
-	var score2 = 0;
-	for (var i = 0 ; i != st1.length ; ++i) {
-		if (st1[i] > st2[i]) { score1 += 2*(i+1); }
-		else if (st1[i] < st2[i]) { score2 += 2*(i+1); }
-		else {
-			score1 += i+1;
-			score2 += i+1;
-		}
-	}
-	return score1 < score2 ? 2 : (score1 > score2 ? 1 : 0);
+function best_strategy(strategies, trainer) {
+	var scores = accumulate(strategies, [], (acc, s) => { acc.push(trainer(s, strategies)); return acc; });
+	return max_against(strategies, scores);
 }
 
-function score_battle(st1, st2) {
-	/**
-	 * Compute the score of <st1>,<st2> for the battle facing <st1> to <st2>
-	 * 
-	 * Output is an array with first corresponding to <st1>'s score, second to <st2>'s
-	 * win    = BATTLE_WIN pts
-	 * nul    = BATTLE_EQUALITY pts
-	 * defeat = 0 pts
-	 */
-	var winner = run_battle(st1, st2);
-	if (winner == 1) { return [BATTLE_WIN, 0]; }
-	else if (winner == 2) { return [0, BATTLE_WIN]; }
-	else { return [BATTLE_EQUALITY, BATTLE_EQUALITY]; }
+/*********************************/
+/*      Measures of success      */
+/*********************************/
+
+var NUM_PANEL_STRATEGIES = 1000;
+
+function make_minimizer_trainer(total_population, num_buckets) {
+	var worst_strategy = generate_n(num_buckets, () => 0);
+	worst_strategy[0] = total_population;
+	var worst_score = count_better_strategies(worst_strategy)
+	return (strategy, others) => worst_score / count_better_strategies(strategy);
 }
 
-function score_against_panel(panel_strategies, strategy) {
-	/**
-	 * Compute the score of <strategy> facing all the strategies in <panel_strategies>
-	 * 
-	 * win    = BATTLE_WIN pts
-	 * nul    = BATTLE_EQUALITY pts
-	 * defeat = 0 pts
-	 */
-	return accumulate(panel_strategies, 0, (acc, s) => strategy === s ? acc : acc + score_battle(strategy, s)[0]);
+function make_panel_trainer() {
+	var panel_strategies = generate_strategies(NUM_PANEL_STRATEGIES);
+	return (strategy, others) => score_against_panel(panel_strategies, strategy);
 }
+
+function make_self_trained_trainer() {
+	return (strategy, others) => score_against_panel(strategy, others);
+}
+
+/*********************************/
+/*       Strategy mutation       */
+/*     ( Genetic algorithm )     */
+/*********************************/
+
+var MAX_MUTATIONS = 2;
+var PERCENT_KEPT = 10;
 
 function mutated_strategy(strategy) {
 	/**
@@ -277,29 +322,11 @@ function make_next_generation(strategies, trainer) {
 	};
 }
 
-function best_strategy(strategies, trainer) {
-	var scores = accumulate(strategies, [], (acc, s) => { acc.push(trainer(s, strategies)); return acc; });
-	return max_against(strategies, scores);
-}
+/*********************************/
+/*       Genetic algorithm       */
+/*********************************/
 
 var NUM_STRATEGIES = 100;
-var NUM_PANEL_STRATEGIES = 1000;
-
-function make_minimizer_trainer(total_population, num_buckets) {
-	var worst_strategy = generate_n(num_buckets, () => 0);
-	worst_strategy[0] = total_population;
-	var worst_score = count_better_strategies(worst_strategy)
-	return (strategy, others) => worst_score / count_better_strategies(strategy);
-}
-
-function make_panel_trainer() {
-	var panel_strategies = generate_strategies(NUM_PANEL_STRATEGIES);
-	return (strategy, others) => score_against_panel(panel_strategies, strategy);
-}
-
-function make_self_trained_trainer() {
-	return (strategy, others) => score_against_panel(strategy, others);
-}
 
 function suggest_strategy(steps, trainer) {
 	var strategies = generate_strategies(NUM_STRATEGIES);
