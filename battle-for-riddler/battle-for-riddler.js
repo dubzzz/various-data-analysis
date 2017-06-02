@@ -98,12 +98,19 @@ var PERCENT_KEPT = 10;
 var BATTLE_WIN = 3;
 var BATTLE_EQUALITY = 1;
 
+function generate_strategy(num) {
+	/**
+	 * Generate a game strategy
+	 * ie. how we want to spread our <STRATEGY_POPULATION> units on the <STRATEGY_SIZE> castles
+	 */
+	return random_normalized_array(STRATEGY_POPULATION, STRATEGY_SIZE);
+}
+
 function generate_strategies(num) {
-	var strategies = [];
-	for (var i = 0 ; i != num ; ++i) {
-		strategies.push(random_normalized_array(STRATEGY_POPULATION, STRATEGY_SIZE));
-	}
-	return strategies;
+	/**
+	 * Generate <num> game strategies
+	 */
+	return generate_n(num, () => generate_strategy());
 }
 
 function count_better_strategies_helper(strategy, already_asked, num_buckets, total_population, doubled_target_score) {
