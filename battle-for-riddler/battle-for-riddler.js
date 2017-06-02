@@ -260,16 +260,21 @@ function derive_from_parents(parents) {
 	return mutated_strategy(derived);
 }
 
-function mutated_strategies(strategies, trainer) {
+function make_next_generation(strategies, trainer) {
 	var scores = accumulate(strategies, [], (acc, s) => { acc.push(trainer(s, strategies)); return acc; });
 	var sorted = sorted_against(strategies, scores, (a,b) => b-a);
 
 	var NUM_KEPT_STRATEGIES = Math.floor(strategies.length * PERCENT_KEPT / 100.);
 	var parents = sorted.slice(0, NUM_KEPT_STRATEGIES);
-	for (var i = 0 ; i != sorted.length ; ++i) {
+
+	for (var i = 1 ; i != sorted.length ; ++i) {
 		sorted[i] = derive_from_parents(parents);
 	}
-	return sorted;
+
+	return {
+		strategies: sorted
+		, best_score: accumulate(scores, Number.MIN_VALUE, (mini, cur) => Math.max(mini, cur))
+	};
 }
 
 function best_strategy(strategies, trainer) {
@@ -299,7 +304,7 @@ function make_self_trained_trainer() {
 function suggest_strategy(steps, trainer) {
 	var strategies = generate_strategies(NUM_STRATEGIES);
 	while (steps-- > 0) {
-		strategies = mutated_strategies(strategies, trainer);
+		strategies = make_next_generation(strategies, trainer).strategies;
 	}
 	return best_strategy(strategies, trainer);
 }
@@ -311,9 +316,10 @@ function suggest_strategy_retry(retries, trainer) {
 	var current_best = 0;
 	var num_failures = 0;
 	while (num_failures < retries) {
-		strategies = mutated_strategies(strategies, trainer);
 		var previous_best = current_best;
-		current_best = trainer(best_strategy(strategies, trainer), strategies);
+		var out = make_next_generation(strategies, trainer);
+		strategies = out.strategies;
+		current_best = out.best_score;
 		if (previous_best < current_best) { num_failures = 0; }
 		else {
 			++num_failures;
