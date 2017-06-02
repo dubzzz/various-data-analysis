@@ -251,6 +251,11 @@ QUnit.test("real panel", function(assert) {
 	assert.strictEqual(score_against_panel([[3,0,0],[0,3,0],[0,0,3],[0,1,2]], [1,1,1]), BATTLE_WIN + BATTLE_WIN + BATTLE_EQUALITY + 0, "score should be to 2x wins + 1x equality");
 });
 
+QUnit.test("strategy is also in the panel", function(assert) {
+	var panel = [[1,1,1],[3,0,0],[0,3,0],[0,0,3],[0,1,2]];
+	assert.strictEqual(score_against_panel(panel, panel[0]), BATTLE_WIN + BATTLE_WIN + BATTLE_EQUALITY + 0, "score should be to 2x wins + 1x equality");
+});
+
 QUnit.module("mutated_strategy");
 
 QUnit.test("should not alter the input", function(assert) {
