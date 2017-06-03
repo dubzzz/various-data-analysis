@@ -17,6 +17,8 @@
         <button type="button" id="generate">Panel trainer</button>
         <button type="button" id="generate_minimizer">Minimize risk trainer</button>
         <button type="button" id="generate_self_trained">Self-trained trainer</button>
+        <button type="button" id="generate_fun">Fun trainer</button>
+        <button type="button" id="generate_mixed">Mixed trainer</button>
         <br/>
         <button type="button" id="generate_crazy">Panel trainer</button>
         <button type="button" id="generate_self_trained_crazy">Self-trained trainer</button>
@@ -55,7 +57,7 @@
         var $f = $("<input/>");
         $f.attr("id", "castle" + idx);
         $f.attr("type", "number");
-        $f.attr("step", "8");
+        $f.attr("step", "1");
         $f.attr("value", "0");
         $f.attr("min", "0");
         $f.attr("max", "100");
@@ -105,6 +107,39 @@
       });
       $("#generate_self_trained_crazy").click(function() {
           generate_with_trainer(make_self_trained_trainer(), (num) => generate_crazy_strategies(num, CRAZY_STRENGTH));
+      });
+      $("#generate_fun").click(function() {
+          var fs = [
+              (strategy, others) => {
+                  var idx = 0;
+                  return accumulate(strategy, 0, (acc, s) => acc + Math.sqrt(s) * (++idx));
+              }, (strategy, others) => {
+                  var idx = 0;
+                  return accumulate(strategy, 0, (acc, s) => acc + Math.abs(Math.sin(s)) * (++idx));
+              } , (strategy, others) => {
+                  var idx = 0;
+                  return accumulate(strategy, 0, (acc, s) => acc + Math.sqrt(s) * Math.abs(Math.sin(s)) * (++idx));
+              } , (strategy, others) => {
+                  var idx = 0;
+                  return accumulate(strategy, 0, (acc, s) => acc + Math.log(s) * (++idx));
+              } , (strategy, others) => {
+                  var idx = 0;
+                  return accumulate(strategy, 0, (acc, s) => acc + Math.sin(Math.sqrt(s) * Math.PI / (2 * Math.sqrt(STRATEGY_POPULATION))) * (++idx));
+              }
+          ];
+          var fs_labels = ["sqrt", "abs(sin)", "sqrt*abs(sin)", "log", "rescaled sin"];
+          var rid = Math.floor(fs.length * Math.random());
+          console.log("Running fun algorithm: " + fs_labels[rid]);
+          generate_with_trainer(fs[rid]);
+      });
+      $("#generate_mixed").click(function() {
+          var t_panel = make_panel_trainer();
+          var t_minim = make_minimizer_trainer(STRATEGY_POPULATION, STRATEGY_SIZE);
+          generate_with_trainer((strategy, others) => {
+              var m = t_minim(strategy, others);
+              if (m > 10) return t_panel(strategy, others);
+              else return t_panel(strategy, others) * m / 10.;
+          });
       });
 
       function evaluate_against(comparison_dataset) {

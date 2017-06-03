@@ -363,7 +363,6 @@ function suggest_strategy(steps, trainer, strategy_gen) {
 	while (steps-- > 0) {
 		var out = make_next_generation(strategies, trainer);
 		strategies = out.strategies;
-		console.log(out.best_score);
 		scores.push(out.best_score);
 	}
 	return {suggestion: best_strategy(strategies, trainer), scores: scores};
@@ -383,7 +382,6 @@ function suggest_strategy_retry(retries, trainer, strategy_gen) {
 		var out = make_next_generation(strategies, trainer);
 		strategies = out.strategies;
 		current_best = out.best_score;
-		console.log(current_best);
 		scores.push(current_best);
 		if (previous_best < current_best) { num_failures = 0; }
 		else {
@@ -408,7 +406,6 @@ function suggest_strategy_descent(trainer) {
 
 	while (prev_strategy !== strategy) {
 		scores.push(score);
-		console.log(strategy, " with score ", score);
 		var cloned = strategy.slice();
 		var prev_strategy = strategy;
 
