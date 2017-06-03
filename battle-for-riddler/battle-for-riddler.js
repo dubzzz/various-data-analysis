@@ -354,20 +354,25 @@ function make_next_generation(strategies, trainer) {
 var NUM_STRATEGIES = 100;
 
 function suggest_strategy(steps, trainer, strategy_gen) {
+	var scores = [];
 	if (strategy_gen === undefined) {
-		strategy_gen = (num) => generate_strategy(num);
+		strategy_gen = (num) => generate_strategies(num);
 	}
 
 	var strategies = strategy_gen(NUM_STRATEGIES);
 	while (steps-- > 0) {
-		strategies = make_next_generation(strategies, trainer).strategies;
+		var out = make_next_generation(strategies, trainer);
+		strategies = out.strategies;
+		console.log(out.best_score);
+		scores.push(out.best_score);
 	}
-	return best_strategy(strategies, trainer);
+	return {suggestion: best_strategy(strategies, trainer), scores: scores};
 }
 
 function suggest_strategy_retry(retries, trainer, strategy_gen) {
+	var scores = [];
 	if (strategy_gen === undefined) {
-		strategy_gen = (num) => generate_strategy(num);
+		strategy_gen = (num) => generate_strategies(num);
 	}
 
 	var strategies = strategy_gen(NUM_STRATEGIES);	
@@ -378,6 +383,8 @@ function suggest_strategy_retry(retries, trainer, strategy_gen) {
 		var out = make_next_generation(strategies, trainer);
 		strategies = out.strategies;
 		current_best = out.best_score;
+		console.log(current_best);
+		scores.push(current_best);
 		if (previous_best < current_best) { num_failures = 0; }
 		else {
 			++num_failures;
@@ -385,7 +392,7 @@ function suggest_strategy_retry(retries, trainer, strategy_gen) {
 		}
 	}
 
-	return best_strategy(strategies, trainer);
+	return {suggestion: best_strategy(strategies, trainer), scores: scores};
 }
 
 /*********************************/
@@ -393,12 +400,14 @@ function suggest_strategy_retry(retries, trainer, strategy_gen) {
 /*********************************/
 
 function suggest_strategy_descent(trainer) {
+	var scores = [];
 	var prev_strategy = undefined;
 	var strategy = generate_strategy();
 	var score = trainer(strategy, []);
 	var make_move = (st, i, j) => { --st[i]; ++st[j]; }
 
 	while (prev_strategy !== strategy) {
+		scores.push(score);
 		console.log(strategy, " with score ", score);
 		var cloned = strategy.slice();
 		var prev_strategy = strategy;
@@ -418,5 +427,5 @@ function suggest_strategy_descent(trainer) {
 			}
 		}
 	}
-	return strategy;
+	return {suggestion: strategy, scores: scores};
 }

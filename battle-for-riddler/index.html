@@ -7,6 +7,7 @@
     <script src="algorithms.js"></script>
     <script src="battle-for-riddler.js"></script>
     <script src="dataset.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
   </head>
   <body>
     <div id="castles"></div>
@@ -32,11 +33,22 @@
         <button type="button" id="evaluate_random10000">10k randoms</button>
       </div>
     </div>
+    <div>
+      <h2>Scores during generation</h2>
+      <canvas id="score_history" width="400px" height="300px"></canvas>
+    </div>
 
     <script type="text/javascript">
       var NUM_FIELDS = 10;
       var CRAZY_STRENGTH = 5;
       var PERCENT_COMBINATION_BETTER_CRAZY = 100. / CRAZY_STRENGTH;
+
+      var myLineChart = new Chart(document.getElementById("score_history"), {
+            "type": "line"
+            ,"data": {
+                "labels": []
+                , "datasets":[{"label": "Score", "data": [], "fill": false, "lineTension": 0.1}]
+            }, "options": {}});
 
       var $fields = $("#castles");
       for (var idx = 0 ; idx != NUM_FIELDS ; ++idx) {
@@ -54,12 +66,21 @@
       $("#generate_self_trained_crazy").text($("#generate_self_trained_crazy").text() + " (members winning " + Number(100. - PERCENT_COMBINATION_BETTER_CRAZY).toFixed(0) + "%)");
 
       function generate_with_trainer(trainer, strategy_gen) {
-        var suggestion = $("#switch_generator").is(":checked")
+        var answer = $("#switch_generator").is(":checked")
             ? suggest_strategy_retry(10, trainer, strategy_gen)
             : suggest_strategy_descent(trainer);
+        var suggestion = answer.suggestion;
+        var scores = answer.scores;
+
         for (var i = 0 ; i != NUM_FIELDS ; ++i) {
           $("#castle" + i).val(suggestion[i]);
         }
+
+        var idx = 0;
+        var runs = generate_n(scores.length, () => ++idx);
+        myLineChart.data.labels = runs;
+        myLineChart.data.datasets[0].data = scores;
+        myLineChart.update();
       }
 
       function read_user_input() {
