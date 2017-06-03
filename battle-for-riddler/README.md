@@ -35,3 +35,5 @@ It happens that most of the generated strategies perform very well on purely ran
 Some of the simplest heuristic just perform as well as the most complex (and most of the time even better) on the dataset of the contest.
 
 All trainings have been carried out without using any data coming from the dataset of the contest.
+
+Live example is available at: https://dubzzz.github.io/various-data-analysis/battle-for-riddler/
